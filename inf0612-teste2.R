@@ -20,5 +20,10 @@
 #--------------------------------------------------------------#
 #     Configuracao dos arquivos, libs e funções auxiliares     #
 #--------------------------------------------------------------#
-install.packages("ecodist")
 setwd("~/studies/mdc/INF-0612-I/teste2")
+
+con <- url("https://www.ic.unicamp.br/~zanoni/cepagri/cepagri.csv", "r")
+cepagri <- read.csv(con, header = FALSE,
+                    sep = ";")
+head(cepagri)
+close(con)
