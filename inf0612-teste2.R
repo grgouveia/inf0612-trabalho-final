@@ -58,4 +58,6 @@ for (i in 2:length(cepagri)) {
   cepagri[,i] <- aux
 }
 
-# 
+# Removing outliers
+summary(cepagri)
+cepagri[cepagri$sensa == 99.9, 5] <- NA
