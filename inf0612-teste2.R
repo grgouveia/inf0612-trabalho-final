@@ -25,6 +25,43 @@ setwd("~/studies/mdc/INF-0612-I/teste2")
 is_na <- function(col){
   any(is.na(col))
 }
+
+consecutive_before <- function(vector, k = 1) {
+  n <- length(vector)
+
+  result <- logical(n)
+  
+  for (i in (1+k):n)
+   if (all(vector[(i-k):(i-1)] == vector[i]))
+     result[i] <- TRUE
+  
+   return(result)
+}
+
+consecutive_after <- function(vector, k = 1) {
+  n <- length(vector)
+  
+  result <- logical(n)
+  
+  for (i in (1+k):n)
+    if (all(vector[(i+1):(i+k)] == vector[i]))
+      result[i] <- TRUE
+  
+  return(result)
+}
+
+
+consecutive_both <- function(vector, k = 1) {
+  n <- length(vector)
+  result <- logical(n)
+  for (i in (1+k):n)
+    if (all(vector[(i-k):(i-1)] == vector[i]))
+      result[i] <- TRUE
+  for (i in 1:(n-k))
+    if (all(vector[(i+1):(i+k)] == vector[i]))
+      result[i] <- TRUE
+ return(result)
+}
 #--------------------------------------------------------------#
 #     Loading data                                             #
 #--------------------------------------------------------------#
@@ -61,3 +98,11 @@ for (i in 2:length(cepagri)) {
 # Removing outliers
 summary(cepagri)
 cepagri[cepagri$sensa == 99.9, 5] <- NA
+summary(cepagri)
+
+# Treating repeated data due to data collection outage
+cepagri[,1] <- as.POSIXct(
+                as.character(cepagri[,1]),
+                format = '%d/%m/%Y-%H:%M')
+filtro <- consecutive(cepagri$temp, 144)
+length(unique(as.Date(cepagri[filtro, 1])))
