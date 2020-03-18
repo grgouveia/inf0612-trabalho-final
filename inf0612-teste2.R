@@ -36,6 +36,22 @@ cepagri <- read.csv(con, header = FALSE,
                     col.names = names)
 head(cepagri)
 close(con)
+
+
+#Observacao dos dados 
+summary(cepagri)
+
+#Filtrar pelos dados do enuncionado do trabalho, para isso criar as colunas ano e mes e aplicar o filtro
+
+cepagri$horario <- as.POSIXct(as.character(cepagri$horario), format = '%d/%m/%Y-%H:%M') 
+cepagri$horario <- as.POSIXlt(cepagri$horario)
+cepagri$ano <- unclass(cepagri$horario)$year + 1900
+cepagri$mes <- unclass(cepagri$horario)$mon + 1
+
+intervalo <- list(2015, 2016, 2017, 2018, 2019)
+cepagri<-cepagri[cepagri$ano %in% intervalo,]
+
+
 #--------------------------------------------------------------#
 #     Processing data                                          #
 #--------------------------------------------------------------#
