@@ -74,6 +74,33 @@ for (i in 2:length(cepagri)) {
   cepagri[,i] <- aux
 }
 
-# Removing outliers
-summary(cepagri)
+###analisando discrepancia de cada informacao
+
+
+## Removing outliers para sensa
+#sensa
+summary(cepagri$sensa)
 cepagri[cepagri$sensa == 99.9, 5] <- NA
+
+#umid
+summary(cepagri$umid) 
+cepagri[cepagri$umid == 0,]
+sort(cepagri[cepagri$umid < 5,4])
+umid_muito_baixa<-cepagri[cepagri$umid < 5,4]
+#ocorrem muito nas medicoes entre 07:00 e 07:10 e apenas esse sensor com 0, parece um erro do sensor
+#alem disso nao existe nenhum outro valor perto de 0, nem menor que 5
+#Para o valor maior
+umid_muito_alta<-sort(cepagri[cepagri$umid > 95 & cepagri$umid!=100 ,4 ], decreasing = TRUE)
+#ocorrem valores proximos de 100, entao 100 parece um valor valido
+
+cepagri[cepagri$umid == 0, 4] <- NA
+
+
+#umid
+summary(cepagri$vento) 
+sort(cepagri[cepagri$vento < 5,3])
+#ocorrem valores proximos de 0, entao 0 parece um valor valido
+#sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
+
+
+## Analisar registros duplicados
