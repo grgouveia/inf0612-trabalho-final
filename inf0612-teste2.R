@@ -186,8 +186,10 @@ for(i in 2:5){
     dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
     #calculo média colunas 2:5
     media <-round(c(media, mean(cepagri[,i],na.rm = TRUE)))
-    #Coeficiente de variação
+    
 }
+#Coeficiente de variação
+coef_var <- round(c(coef_var, (dp/media)*100),2)
 # Tabela que mostra a média, desvio padrão e coeficiente de variação de cada coluna
 variaveis <- c('temp','vento','umid','sensa')
 medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
