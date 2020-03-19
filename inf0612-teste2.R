@@ -63,7 +63,9 @@ consecutive_both <- function(vector, k = 1) {
  return(result)
 }
 #--------------------------------------------------------------#
-#     Loading data                                             #
+#     1. Processing data                                       #
+#--------------------------------------------------------------#
+#     1.1 Loading data                                         #
 #--------------------------------------------------------------#
 names <- c("horario", "temp", "vento", "umid", "sensa")
 con <- url("https://www.ic.unicamp.br/~zanoni/cepagri/cepagri.csv", "r")
@@ -74,9 +76,10 @@ cepagri <- read.csv(con, header = FALSE,
 head(cepagri)
 close(con)
 #--------------------------------------------------------------#
-#     Processing data                                          #
+#     1. Processing data                                       #
 #--------------------------------------------------------------#
-# Removing lines with NA on any column
+#     1.2 Removing lines with NA on any column                 #
+#--------------------------------------------------------------#
 na_percent <- paste(sum(is.na(cepagri))/nrow(cepagri)*100,"%")
 if (na_percent > 0) {
   is_na <- apply(cepagri, 1, is_na)
@@ -84,7 +87,11 @@ if (na_percent > 0) {
   confirm_removal <- !any(is.na(cepagri)); paste("Rows with NA data", ifelse(confirm_removal, "removed.", "removal failed."))
 }
 
-# Fixing mistakenly coerced columns
+#--------------------------------------------------------------#
+#     1. Processing data                                       #
+#--------------------------------------------------------------#
+#     1.3 Fixing mistakenly coerced columns                    #
+#--------------------------------------------------------------#
 for (i in 2:length(cepagri)) {
   aux <- cepagri[,i]
   if(is.factor(aux)) {
@@ -95,12 +102,20 @@ for (i in 2:length(cepagri)) {
   cepagri[,i] <- aux
 }
 
-# Removing outliers
+#--------------------------------------------------------------#
+#     1. Processing data                                       #
+#--------------------------------------------------------------#
+#     1.3 Removing outliers                                    #
+#--------------------------------------------------------------#
 summary(cepagri)
 cepagri[cepagri$sensa == 99.9, 5] <- NA
 summary(cepagri)
 
-# Treating repeated data due to data collection outage
+#--------------------------------------------------------------#
+#     1. Processing data                                       #
+#--------------------------------------------------------------#
+#     1.4 Repeated values within consecutive days              #
+#--------------------------------------------------------------#
 cepagri[,1] <- as.POSIXct(
                 as.character(cepagri[,1]),
                 format = '%d/%m/%Y-%H:%M')
