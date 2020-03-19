@@ -47,6 +47,7 @@ cepagri$horario <- as.POSIXct(as.character(cepagri$horario), format = '%d/%m/%Y-
 cepagri$horario <- as.POSIXlt(cepagri$horario)
 cepagri$ano <- unclass(cepagri$horario)$year + 1900
 cepagri$mes <- unclass(cepagri$horario)$mon + 1
+cepagri$dia <- unclass(cepagri$horario)$mday 
 
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 cepagri<-cepagri[cepagri$ano %in% intervalo,]
@@ -205,6 +206,40 @@ hist(cepagri$sensa, col = 'red', main = 'Histograma Sensação Térmica', xlab =
 hist(cepagri$vento, col = 'gray', main = 'Histograma Vento', xlab = 'Vento', ylab = 'Frequência')
 hist(cepagri$umid, col = 'blue', main = 'Histograma Umidade', xlab = 'Umidade', ylab = 'Frequência')
 
+
+
+#-------------------------Analisando relacao temperatura umidade 
+
+
+
+cepagri_temp_umid_sensa <- cepagri[2:5]
+cepagri_temp_umid_sensa[2] <- NULL
+cepagri_temp_umid_sensa[duplicated(cepagri_temp_umid_sensa),]
+
+#Remove linhas duplicadas
+cepagri_temp_umid_sensa <- cepagri_temp_umid_sensa[!duplicated(cepagri_temp_umid_sensa),]
+
+
+#verifica se ainda tem linhas duplicadas
+cepagri_temp_umid_sensa[duplicated(cepagri_temp_umid_sensa),]
+
+p_teste <- ggplot(cepagri_temp_umid_sensa, aes(x = temp,  y = umid,  group = temp)) 
+p_teste$layers 
+p_teste <- p_teste + geom_point() + geom_line() 
+p_teste$layers
+
+#-------------------------Analisando relacao temperatura umidade e sensacao termica
+
+library(dplyr)
+#temp
+#temp dados mininos e maximos-- encont5rando dados medios por dia e arredondando o valor
+dados_grafico<-group_by(cepagri,ano, mes, dia)%>%summarise(TempMedia=mean(temp), UmidMedia=mean(umid),   SensaMedi=mean(sensa))
+dados_grafico$TempMedia<-round(dados_grafico$TempMedia)
+dados_grafico$UmidMedia<-round(dados_grafico$UmidMedia)
+dados_grafico$SensaMedi<-round(dados_grafico$SensaMedi)
+
+
+ggplot(dados_grafico[!duplicated(dados_grafico),],  aes(x = TempMedia, y = UmidMedia,   size = (SensaMedi), colour = 'color'))   + geom_point(alpha = 0.5)
 
 
 
