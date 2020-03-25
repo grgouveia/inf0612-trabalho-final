@@ -28,8 +28,8 @@ library(tidyverse)
 library(ggplot2)
 library(dplyr)
 
-# Filtra o dataframe (df) passado como argumento 
-# de acordo com um intervalo (interval) em ano 
+# Filtra o dataframe (df) passado como argumento
+# de acordo com um intervalo (interval) em ano
 # ou mês, sendo estes critérios definidos pela
 # variável attr. Os Valores possíveis para
 # os atributos são mes e ano.
@@ -37,7 +37,7 @@ filterBy <- function(attr, df, interval) {
   df$horario <- as.POSIXlt(df$horario)
   df$ano <- unclass(df$horario)$year + 1900
   df$mes <- unclass(df$horario)$mon + 1
-  
+
   if(attr == "ano" ){
     df<-df[df$ano %in% interval,]
   } else {
@@ -51,7 +51,7 @@ is_na <- function(row){
   any(is.na(row))
 }
 
-# analisa se os dados nas k posições à frente e atràs da 
+# analisa se os dados nas k posições à frente e atràs da
 # posição especificada são repetidos para encontrar
 # valores consecutivos repetidos
 consecutive <- function(vector, k = 1) {
@@ -76,11 +76,25 @@ cepagri <- read.csv(con, header = FALSE,
                     sep = ";",
                     fill = TRUE,
                     col.names = names)
+
 head(cepagri)
 close(con)
 
-#Observacao dos dados 
+#Observacao dos dados
 summary(cepagri)
+
+#Filtrar pelos dados do enuncionado do trabalho, para isso criar as rowunas ano e mes e aplicar o filtro
+
+cepagri$horario <- as.POSIXct(as.character(cepagri$horario), format = '%d/%m/%Y-%H:%M')
+cepagri$horario <- as.POSIXlt(cepagri$horario)
+cepagri$ano <- unclass(cepagri$horario)$year + 1900
+cepagri$mes <- unclass(cepagri$horario)$mon + 1
+cepagri$dia <- unclass(cepagri$horario)$mday
+
+intervalo <- list(2015, 2016, 2017, 2018, 2019)
+cepagri<-cepagri[cepagri$ano %in% intervalo,]
+
+
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
@@ -120,7 +134,7 @@ summary(cepagri$sensa)
 cepagri[cepagri$sensa == 99.9, 5] <- NA
 
 #umid
-summary(cepagri$umid) 
+summary(cepagri$umid)
 cepagri[cepagri$umid == 0,]
 sort(cepagri[cepagri$umid < 5,4])
 umid_muito_baixa<-cepagri[cepagri$umid < 5,4]
@@ -153,10 +167,20 @@ filtro <- consecutive(cepagri$temp, 144)
 length(unique(as.Date(cepagri[filtro, 1])))
 
 #umid
-summary(cepagri$vento) 
+summary(cepagri$vento)
 sort(cepagri[cepagri$vento < 5,3])
-# ocorrem valores proximos de 0, entao 0 parece um valor valido
-# sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
+#ocorrem valores proximos de 0, entao 0 parece um valor valido
+#sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
+
+#-----------------------------------------------#
+#        Análise registros duplicados          #
+#-----------------------------------------------#
+
+#install.packages('tidyverse')
+library(tidyverse)
+
+#Retorna as linhas duplicadas do data frame
+cepagri[duplicated(cepagri),]
 
 # Exemplo de filtragem de uma linha duplidada
 cepagri[cepagri$horario == '2015-01-23 09:24:00',]
@@ -191,7 +215,7 @@ temp_media
 
 
 #-----------------------------------------------#
-#     Medidas de posição com a base tratada     #  
+#     Medidas de posição com a base tratada     #
 #-----------------------------------------------#
 summary(cepagri)
 
@@ -244,7 +268,7 @@ for(i in 2:5){
     dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
     #calculo média rowunas 2:5
     media <-round(c(media, mean(cepagri[,i],na.rm = TRUE)))
-    
+
 }
 #Coeficiente de variação
 coef_var <- round(c(coef_var, (dp/media)*100),2)
@@ -254,15 +278,61 @@ medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
 
 
 #-------------------------Histogramas
-# Histograma de cada rowuna 
+# Histograma de cada rowuna
 hist(cepagri$temp, row = 'green', main = 'Histograma Temperatura', xlab = 'Temperatura', ylab = 'Frequência')
 hist(cepagri$sensa, row = 'red', main = 'Histograma Sensação Térmica', xlab = 'sensação térmica', ylab = 'Frequência')
 hist(cepagri$vento, row = 'gray', main = 'Histograma Vento', xlab = 'Vento', ylab = 'Frequência')
 hist(cepagri$umid, row = 'blue', main = 'Histograma Umidade', xlab = 'Umidade', ylab = 'Frequência')
 
 
+#-------------------------Analisando relacao temperatura umidade e sensacao termica
+library(dplyr)
+cepagri_analise <- cepagri
+
+cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$temp), ]
+cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$vento), ]
+cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$sensa), ]
+cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$umid), ]
 
 
+
+dados_grafico2<-group_by(cepagri_analise, mes)%>%summarise(TempMedia=mean(temp), UmidMedia=mean(umid),   SensaMedi=mean(sensa), VentoMedi=mean(vento))
+
+
+ggplot(dados_grafico2, aes(x = mes)) +
+  geom_point(aes(y = TempMedia, colour = "Temperatura media")) +
+  geom_line(aes(y = TempMedia, colour = "Temperatura media")) +
+
+  geom_point(aes(y = UmidMedia, colour = "Umidade media")) +
+  geom_line(aes(y = UmidMedia, colour = "Umidade media")) +
+
+  geom_point(aes(y = SensaMedi, colour = "Sensacao media")) +
+  geom_line(aes(y = SensaMedi, colour = "Sensacao media")) +
+
+  geom_point(aes(y = VentoMedi, colour = "Velocidade Vento media")) +
+  geom_line(aes(y = VentoMedi, colour = "Velocidade Vento media")) +
+
+
+  theme_light() +
+  labs(colour = element_blank(),
+       title = "Comparativo dos valores medios ao mes de todo periodo") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = c(0.1, 0.9)) +
+  theme(legend.box.background = element_rect(colour = "black")) +
+  scale_x_continuous(name = "mes", limits = c(1, 12),
+                     breaks =  0:12,
+                     minor_breaks = NULL) +
+  scale_y_continuous(name = "Valor", limits = c(0, 100),
+                     breaks = 10 * 0:10,
+                     minor_breaks = NULL)
+
+
+dados_grafico2
+
+#� poss�vel observar que a sensa��o termica m�dia durante os meses sempre � mais baixa que a temperatura m�dia. Nos
+#meses de ver�o , 1,2,3 e 12, em que as temperaturas s�o mais altas e a velocidade de vento m�dia � mais baixa,
+#a diferen�a entre a sensa��o termica e a temperatura tende a ser menor.
+#Nos meses de inverno, apresentou uma maior varia��o, principalmente quando a umidade media era um pouco mais baixa
 
 
 
