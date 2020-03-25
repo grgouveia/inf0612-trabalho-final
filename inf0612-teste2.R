@@ -51,7 +51,10 @@ con <- url("https://www.ic.unicamp.br/~zanoni/cepagri/cepagri.csv", "r")
 cepagri <- read.csv(con, header = FALSE,
                     sep = ";",
                     fill = TRUE,
-                    row.names = names)
+                    col.names = names)
+
+#cepagri <- read.csv("cepagri.csv", fill = TRUE, header = FALSE, sep = ";", col.names = names)
+
 head(cepagri)
 close(con)
 
@@ -64,6 +67,7 @@ cepagri$horario <- as.POSIXct(as.character(cepagri$horario), format = '%d/%m/%Y-
 cepagri$horario <- as.POSIXlt(cepagri$horario)
 cepagri$ano <- unclass(cepagri$horario)$year + 1900
 cepagri$mes <- unclass(cepagri$horario)$mon + 1
+cepagri$dia <- unclass(cepagri$horario)$mday 
 
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 cepagri<-cepagri[cepagri$ano %in% intervalo,]
@@ -146,7 +150,7 @@ sort(cepagri[cepagri$vento < 5,3])
 #        AnÃ¡lise registros duplicados          #
 #-----------------------------------------------#
 
-install.packages('tidyverse')
+#install.packages('tidyverse')
 library(tidyverse)
 
 #Retorna as linhas duplicadas do data frame
@@ -246,8 +250,54 @@ hist(cepagri$vento, row = 'gray', main = 'Histograma Vento', xlab = 'Vento', yla
 hist(cepagri$umid, row = 'blue', main = 'Histograma Umidade', xlab = 'Umidade', ylab = 'FrequÃªncia')
 
 
+#-------------------------Analisando relacao temperatura umidade e sensacao termica
+library(dplyr)
+cepagri_analise <- cepagri
+
+cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$temp), ]
+cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$vento), ]
+cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$sensa), ]
+cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$umid), ]
 
 
+
+dados_grafico2<-group_by(cepagri_analise, mes)%>%summarise(TempMedia=mean(temp), UmidMedia=mean(umid),   SensaMedi=mean(sensa), VentoMedi=mean(vento))
+
+
+ggplot(dados_grafico2, aes(x = mes)) + 
+  geom_point(aes(y = TempMedia, colour = "Temperatura media")) + 
+  geom_line(aes(y = TempMedia, colour = "Temperatura media")) +
+  
+  geom_point(aes(y = UmidMedia, colour = "Umidade media")) + 
+  geom_line(aes(y = UmidMedia, colour = "Umidade media")) +
+  
+  geom_point(aes(y = SensaMedi, colour = "Sensacao media")) + 
+  geom_line(aes(y = SensaMedi, colour = "Sensacao media")) +
+  
+  geom_point(aes(y = VentoMedi, colour = "Velocidade Vento media")) + 
+  geom_line(aes(y = VentoMedi, colour = "Velocidade Vento media")) +
+  
+  
+  theme_light() +
+  labs(colour = element_blank(), 
+       title = "Comparativo dos valores medios ao mes de todo periodo") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = c(0.1, 0.9)) +
+  theme(legend.box.background = element_rect(colour = "black")) +
+  scale_x_continuous(name = "mes", limits = c(1, 12),
+                     breaks =  0:12,
+                     minor_breaks = NULL) +
+  scale_y_continuous(name = "Valor", limits = c(0, 100), 
+                     breaks = 10 * 0:10,
+                     minor_breaks = NULL)
+
+
+dados_grafico2
+
+#É possível observar que a sensação termica média durante os meses sempre é mais baixa que a temperatura média. Nos
+#meses de verão , 1,2,3 e 12, em que as temperaturas são mais altas e a velocidade de vento média é mais baixa, 
+#a diferença entre a sensação termica e a temperatura tende a ser menor. 
+#Nos meses de inverno, apresentou uma maior variação, principalmente quando a umidade media era um pouco mais baixa 
 
 
 
