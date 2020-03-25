@@ -20,14 +20,38 @@
 #--------------------------------------------------------------#
 #     Configuracao dos arquivos, libs e funÃ§Ãµes auxiliares     #
 #--------------------------------------------------------------#
-setwd("~/studies/mdc/INF-0612-I/teste2")
+setwd('/home/grgouveia/studies/mdc/INF-0612-I/trabalho-final')
+
+
+install.packages('tidyverse')
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+
+# Filtra o dataframe (df) passado como argumento
+# de acordo com um intervalo (interval) em ano
+# ou mÃªs, sendo estes critÃ©rios definidos pela
+# variÃ¡vel attr. Os Valores possÃ­veis para
+# os atributos sÃ£o mes e ano.
+filterBy <- function(attr, df, interval) {
+  df$horario <- as.POSIXlt(df$horario)
+  df$ano <- unclass(df$horario)$year + 1900
+  df$mes <- unclass(df$horario)$mon + 1
+
+  if(attr == "ano" ){
+    df<-df[df$ano %in% interval,]
+  } else {
+    df<-df[df$mes %in% interval,]
+  }
+  print(df)
+}
 
 # checa se o valor da linha Ã© NA
 is_na <- function(row){
   any(is.na(row))
 }
 
-# analisa se os dados nas k posiÃ§Ãµes Ã  frente e atrÃ s da 
+# analisa se os dados nas k posiÃ§Ãµes Ã  frente e atrÃ s da
 # posiÃ§Ã£o especificada sÃ£o repetidos para encontrar
 # valores consecutivos repetidos
 consecutive <- function(vector, k = 1) {
@@ -53,21 +77,19 @@ cepagri <- read.csv(con, header = FALSE,
                     fill = TRUE,
                     col.names = names)
 
-#cepagri <- read.csv("cepagri.csv", fill = TRUE, header = FALSE, sep = ";", col.names = names)
-
 head(cepagri)
 close(con)
 
-#Observacao dos dados 
+#Observacao dos dados
 summary(cepagri)
 
 #Filtrar pelos dados do enuncionado do trabalho, para isso criar as rowunas ano e mes e aplicar o filtro
 
-cepagri$horario <- as.POSIXct(as.character(cepagri$horario), format = '%d/%m/%Y-%H:%M') 
+cepagri$horario <- as.POSIXct(as.character(cepagri$horario), format = '%d/%m/%Y-%H:%M')
 cepagri$horario <- as.POSIXlt(cepagri$horario)
 cepagri$ano <- unclass(cepagri$horario)$year + 1900
 cepagri$mes <- unclass(cepagri$horario)$mon + 1
-cepagri$dia <- unclass(cepagri$horario)$mday 
+cepagri$dia <- unclass(cepagri$horario)$mday
 
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 cepagri<-cepagri[cepagri$ano %in% intervalo,]
@@ -103,19 +125,16 @@ for (i in 2:length(cepagri)) {
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
-#     1.3 Removendo outliers                                   #
+#     1.4 Removendo outliers                                   #
 #--------------------------------------------------------------#
-
-
-###analisando discrepancia de cada informacao
-
-## Removing outliers para sensa
+## Analisando discrepancia de cada informacao e
+## removendo outliers
 #sensa
 summary(cepagri$sensa)
 cepagri[cepagri$sensa == 99.9, 5] <- NA
 
 #umid
-summary(cepagri$umid) 
+summary(cepagri$umid)
 cepagri[cepagri$umid == 0,]
 sort(cepagri[cepagri$umid < 5,4])
 umid_muito_baixa<-cepagri[cepagri$umid < 5,4]
@@ -130,18 +149,25 @@ cepagri[cepagri$umid == 0, 4] <- NA
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
-#     1.4 ObservaÃ§Ãµes complementares                           #
-#     Valores repetidos durante dias consectivos               #
+#     1.5 Convertendo coluna de data p/ POSIXct
 #--------------------------------------------------------------#
-cepagri[,1] <- as.POSIXct(
-                as.character(cepagri[,1]),
-                format = '%d/%m/%Y-%H:%M')
+cepagri$horario <- as.POSIXct(
+                as.character(cepagri$horario),
+                format='%d/%m/%Y-%H:%M')
+
+
+#--------------------------------------------------------------#
+#     1. Processando dados                                     #
+#--------------------------------------------------------------#
+#     1.6 AnÃ¡lise registros duplicados                         #
+#         Valores repetidos durante dias consectivos           #
+#--------------------------------------------------------------#
+# filtra os valores recorrentes em 144 dias consecutivos
 filtro <- consecutive(cepagri$temp, 144)
 length(unique(as.Date(cepagri[filtro, 1])))
 
-
 #umid
-summary(cepagri$vento) 
+summary(cepagri$vento)
 sort(cepagri[cepagri$vento < 5,3])
 #ocorrem valores proximos de 0, entao 0 parece um valor valido
 #sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
@@ -159,27 +185,39 @@ cepagri[duplicated(cepagri),]
 # Exemplo de filtragem de uma linha duplidada
 cepagri[cepagri$horario == '2015-01-23 09:24:00',]
 
-#Remove linhas duplicadas
+# Retorna as linhas duplicadas do data frame
+cepagri[duplicated(cepagri),]
+# Remove linhas duplicadas
 cepagri <- cepagri[!duplicated(cepagri),]
 
 #verifica se ainda tem linhas duplicadas
 cepagri[duplicated(cepagri),]
+#--------------------------------------------------------------#
+#     2. Analisando dados                                      #
+#--------------------------------------------------------------#
+#     2.1 Agrupando dados por mÃªs e ano                        #
+#      Filtro de dados agrupados com base em intervalos        #
+#                                                              #
+#--------------------------------------------------------------#
+# Filtrando os dados agrupados por mÃªs dentro do
+# intervalo indicado
+intervalo <- list(2015, 2016, 2017, 2018, 2019)
+filterByYear <- filterBy("ano", cepagri, intervalo)
+filterByMonth <- filterBy("mes", cepagri, intervalo)
 
+# Temperatura mÃ©dia de cada ano
+temp_media_ano <- tapply(cepagri$temp, cepagri$ano, mean)
 
-#-----------------------------------------------#
-#       InÃ­cio AnÃ¡lise dos dados                #
-#-----------------------------------------------#
-
-#Temperatura mÃ©dia de cada mÃªs
+# Temperatura mÃ©dia de cada mÃªs
 temp_media <- tapply(cepagri$temp , cepagri$mes , mean)
 temp_media <- round(temp_media)
 temp_media
 
 
-#----------------Medidas de posiÃ§Ã£o com a base tratada
+#-----------------------------------------------#
+#     Medidas de posiÃ§Ã£o com a base tratada     #
+#-----------------------------------------------#
 summary(cepagri)
-
-library(ggplot2)
 
 ##########################################################
 ##  O cÃ³digo do Boxplot pode ser melhorado e otimizado  ##
@@ -230,7 +268,7 @@ for(i in 2:5){
     dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
     #calculo mÃ©dia rowunas 2:5
     media <-round(c(media, mean(cepagri[,i],na.rm = TRUE)))
-    
+
 }
 #Coeficiente de variaÃ§Ã£o
 coef_var <- round(c(coef_var, (dp/media)*100),2)
@@ -240,10 +278,7 @@ medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
 
 
 #-------------------------Histogramas
-library(ggplot2)
-library(dplyr)
-
-# Histograma de cada rowuna 
+# Histograma de cada rowuna
 hist(cepagri$temp, row = 'green', main = 'Histograma Temperatura', xlab = 'Temperatura', ylab = 'FrequÃªncia')
 hist(cepagri$sensa, row = 'red', main = 'Histograma SensaÃ§Ã£o TÃ©rmica', xlab = 'sensaÃ§Ã£o tÃ©rmica', ylab = 'FrequÃªncia')
 hist(cepagri$vento, row = 'gray', main = 'Histograma Vento', xlab = 'Vento', ylab = 'FrequÃªncia')
@@ -264,22 +299,22 @@ cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$umid), ]
 dados_grafico2<-group_by(cepagri_analise, mes)%>%summarise(TempMedia=mean(temp), UmidMedia=mean(umid),   SensaMedi=mean(sensa), VentoMedi=mean(vento))
 
 
-ggplot(dados_grafico2, aes(x = mes)) + 
-  geom_point(aes(y = TempMedia, colour = "Temperatura media")) + 
+ggplot(dados_grafico2, aes(x = mes)) +
+  geom_point(aes(y = TempMedia, colour = "Temperatura media")) +
   geom_line(aes(y = TempMedia, colour = "Temperatura media")) +
-  
-  geom_point(aes(y = UmidMedia, colour = "Umidade media")) + 
+
+  geom_point(aes(y = UmidMedia, colour = "Umidade media")) +
   geom_line(aes(y = UmidMedia, colour = "Umidade media")) +
-  
-  geom_point(aes(y = SensaMedi, colour = "Sensacao media")) + 
+
+  geom_point(aes(y = SensaMedi, colour = "Sensacao media")) +
   geom_line(aes(y = SensaMedi, colour = "Sensacao media")) +
-  
-  geom_point(aes(y = VentoMedi, colour = "Velocidade Vento media")) + 
+
+  geom_point(aes(y = VentoMedi, colour = "Velocidade Vento media")) +
   geom_line(aes(y = VentoMedi, colour = "Velocidade Vento media")) +
-  
-  
+
+
   theme_light() +
-  labs(colour = element_blank(), 
+  labs(colour = element_blank(),
        title = "Comparativo dos valores medios ao mes de todo periodo") +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.position = c(0.1, 0.9)) +
@@ -287,7 +322,7 @@ ggplot(dados_grafico2, aes(x = mes)) +
   scale_x_continuous(name = "mes", limits = c(1, 12),
                      breaks =  0:12,
                      minor_breaks = NULL) +
-  scale_y_continuous(name = "Valor", limits = c(0, 100), 
+  scale_y_continuous(name = "Valor", limits = c(0, 100),
                      breaks = 10 * 0:10,
                      minor_breaks = NULL)
 
@@ -295,9 +330,9 @@ ggplot(dados_grafico2, aes(x = mes)) +
 dados_grafico2
 
 #É possível observar que a sensação termica média durante os meses sempre é mais baixa que a temperatura média. Nos
-#meses de verão , 1,2,3 e 12, em que as temperaturas são mais altas e a velocidade de vento média é mais baixa, 
-#a diferença entre a sensação termica e a temperatura tende a ser menor. 
-#Nos meses de inverno, apresentou uma maior variação, principalmente quando a umidade media era um pouco mais baixa 
+#meses de verão , 1,2,3 e 12, em que as temperaturas são mais altas e a velocidade de vento média é mais baixa,
+#a diferença entre a sensação termica e a temperatura tende a ser menor.
+#Nos meses de inverno, apresentou uma maior variação, principalmente quando a umidade media era um pouco mais baixa
 
 
 
