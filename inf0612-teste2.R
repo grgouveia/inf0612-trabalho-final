@@ -20,7 +20,31 @@
 #--------------------------------------------------------------#
 #     Configuracao dos arquivos, libs e funções auxiliares     #
 #--------------------------------------------------------------#
-setwd("~/studies/mdc/INF-0612-I/teste2")
+setwd('/home/grgouveia/studies/mdc/INF-0612-I/trabalho-final')
+
+
+install.packages('tidyverse')
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+
+# Filtra o dataframe (df) passado como argumento 
+# de acordo com um intervalo (interval) em ano 
+# ou mês, sendo estes critérios definidos pela
+# variável attr. Os Valores possíveis para
+# os atributos são mes e ano.
+filterBy <- function(attr, df, interval) {
+  df$horario <- as.POSIXlt(df$horario)
+  df$ano <- unclass(df$horario)$year + 1900
+  df$mes <- unclass(df$horario)$mon + 1
+  
+  if(attr == "ano" ){
+    df<-df[df$ano %in% interval,]
+  } else {
+    df<-df[df$mes %in% interval,]
+  }
+  print(df)
+}
 
 # checa se o valor da linha é NA
 is_na <- function(row){
@@ -51,24 +75,12 @@ con <- url("https://www.ic.unicamp.br/~zanoni/cepagri/cepagri.csv", "r")
 cepagri <- read.csv(con, header = FALSE,
                     sep = ";",
                     fill = TRUE,
-                    row.names = names)
+                    col.names = names)
 head(cepagri)
 close(con)
 
 #Observacao dos dados 
 summary(cepagri)
-
-#Filtrar pelos dados do enuncionado do trabalho, para isso criar as rowunas ano e mes e aplicar o filtro
-
-cepagri$horario <- as.POSIXct(as.character(cepagri$horario), format = '%d/%m/%Y-%H:%M') 
-cepagri$horario <- as.POSIXlt(cepagri$horario)
-cepagri$ano <- unclass(cepagri$horario)$year + 1900
-cepagri$mes <- unclass(cepagri$horario)$mon + 1
-
-intervalo <- list(2015, 2016, 2017, 2018, 2019)
-cepagri<-cepagri[cepagri$ano %in% intervalo,]
-
-
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
@@ -99,13 +111,10 @@ for (i in 2:length(cepagri)) {
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
-#     1.3 Removendo outliers                                   #
+#     1.4 Removendo outliers                                   #
 #--------------------------------------------------------------#
-
-
-###analisando discrepancia de cada informacao
-
-## Removing outliers para sensa
+## Analisando discrepancia de cada informacao e
+## removendo outliers
 #sensa
 summary(cepagri$sensa)
 cepagri[cepagri$sensa == 99.9, 5] <- NA
@@ -126,56 +135,65 @@ cepagri[cepagri$umid == 0, 4] <- NA
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
-#     1.4 Observações complementares                           #
-#     Valores repetidos durante dias consectivos               #
+#     1.5 Convertendo coluna de data p/ POSIXct
 #--------------------------------------------------------------#
-cepagri[,1] <- as.POSIXct(
-                as.character(cepagri[,1]),
-                format = '%d/%m/%Y-%H:%M')
+cepagri$horario <- as.POSIXct(
+                as.character(cepagri$horario),
+                format='%d/%m/%Y-%H:%M')
+
+
+#--------------------------------------------------------------#
+#     1. Processando dados                                     #
+#--------------------------------------------------------------#
+#     1.6 Análise registros duplicados                         #
+#         Valores repetidos durante dias consectivos           #
+#--------------------------------------------------------------#
+# filtra os valores recorrentes em 144 dias consecutivos
 filtro <- consecutive(cepagri$temp, 144)
 length(unique(as.Date(cepagri[filtro, 1])))
-
 
 #umid
 summary(cepagri$vento) 
 sort(cepagri[cepagri$vento < 5,3])
-#ocorrem valores proximos de 0, entao 0 parece um valor valido
-#sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
-
-#-----------------------------------------------#
-#        Análise registros duplicados          #
-#-----------------------------------------------#
-
-install.packages('tidyverse')
-library(tidyverse)
-
-#Retorna as linhas duplicadas do data frame
-cepagri[duplicated(cepagri),]
+# ocorrem valores proximos de 0, entao 0 parece um valor valido
+# sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
 
 # Exemplo de filtragem de uma linha duplidada
 cepagri[cepagri$horario == '2015-01-23 09:24:00',]
 
-#Remove linhas duplicadas
+# Retorna as linhas duplicadas do data frame
+cepagri[duplicated(cepagri),]
+# Remove linhas duplicadas
 cepagri <- cepagri[!duplicated(cepagri),]
 
 #verifica se ainda tem linhas duplicadas
 cepagri[duplicated(cepagri),]
+#--------------------------------------------------------------#
+#     2. Analisando dados                                      #
+#--------------------------------------------------------------#
+#     2.1 Agrupando dados por mês e ano                        #
+#      Filtro de dados agrupados com base em intervalos        #
+#                                                              #
+#--------------------------------------------------------------#
+# Filtrando os dados agrupados por mês dentro do
+# intervalo indicado
+intervalo <- list(2015, 2016, 2017, 2018, 2019)
+filterByYear <- filterBy("ano", cepagri, intervalo)
+filterByMonth <- filterBy("mes", cepagri, intervalo)
 
+# Temperatura média de cada ano
+temp_media_ano <- tapply(cepagri$temp, cepagri$ano, mean)
 
-#-----------------------------------------------#
-#       Início Análise dos dados                #
-#-----------------------------------------------#
-
-#Temperatura média de cada mês
+# Temperatura média de cada mês
 temp_media <- tapply(cepagri$temp , cepagri$mes , mean)
 temp_media <- round(temp_media)
 temp_media
 
 
-#----------------Medidas de posição com a base tratada
+#-----------------------------------------------#
+#     Medidas de posição com a base tratada     #  
+#-----------------------------------------------#
 summary(cepagri)
-
-library(ggplot2)
 
 ##########################################################
 ##  O código do Boxplot pode ser melhorado e otimizado  ##
@@ -236,9 +254,6 @@ medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
 
 
 #-------------------------Histogramas
-library(ggplot2)
-library(dplyr)
-
 # Histograma de cada rowuna 
 hist(cepagri$temp, row = 'green', main = 'Histograma Temperatura', xlab = 'Temperatura', ylab = 'Frequência')
 hist(cepagri$sensa, row = 'red', main = 'Histograma Sensação Térmica', xlab = 'sensação térmica', ylab = 'Frequência')
