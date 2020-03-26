@@ -8,7 +8,7 @@
 # Nome COMPLETO Aluna (o) 2: Marina Abichabki                  #
 #                                     Pivato                   #
 #                                                              #
-# Nome COMPLETO Aluna (o) 3: Paola SÃ£o Thiago                  #
+# Nome COMPLETO Aluna (o) 3: Paola São Thiago                  #
 #                                                              #
 #                                                              #
 # Nome COMPLETO Aluna (o) 4:                                   #
@@ -17,7 +17,7 @@
 #--------------------------------------------------------------#
 
 #--------------------------------------------------------------#
-#     Configuracao dos arquivos, libs e funÃ§Ãµes auxiliares     #
+#     Configuracao dos arquivos, libs e funçÃµes auxiliares     #
 #--------------------------------------------------------------#
 setwd('/home/grgouveia/studies/mdc/INF-0612-I/trabalho-final')
 
@@ -28,9 +28,9 @@ library(dplyr)
 
 # Filtra o dataframe (df) passado como argumento
 # de acordo com um intervalo (interval) em ano
-# ou mÃªs, sendo estes critÃ©rios definidos pela
-# variÃ¡vel attr. Os Valores possÃ­veis para
-# os atributos sÃ£o mes e ano.
+# ou mÃªs, sendo estes critérios definidos pela
+# variÃ¡vel attr. Os Valores possÃ?veis para
+# os atributos são mes e ano.
 getYears <- function(col) {
   unclass(col)$year + 1900
 }
@@ -59,13 +59,13 @@ filterBy <- function(attr, df, interval) {
   print(df)
 }
 
-# checa se o valor da linha Ã© NA
+# checa se o valor da linha é NA
 is_na <- function(row){
   any(is.na(row))
 }
 
-# analisa se os dados nas k posiÃ§Ãµes Ã  frente e atrÃ s da
-# posiÃ§Ã£o especificada sÃ£o repetidos para encontrar
+# analisa se os dados nas k posiçÃµes Ã  frente e atrÃ s da
+# posição especificada são repetidos para encontrar
 # valores consecutivos repetidos
 consecutive <- function(vector, k = 1) {
   n <- length(vector)
@@ -111,7 +111,7 @@ if (na_percent > 0) {
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
-#     1.3 Corrigindo coerÃ§Ãµes implÃ­citas indesejadas           #
+#     1.3 Corrigindo coerçÃµes implÃ?citas indesejadas           #
 #--------------------------------------------------------------#
 for (i in 2:length(cepagri)) {
   aux <- cepagri[,i]
@@ -205,10 +205,10 @@ filterByMonth <- filterBy("mes", cepagri, intervalo)
 # adiciona colunas de dia, mes e ano
 cepagri <- addDateColumns(cepagri)
 
-# Temperatura mÃ©dia de cada ano
+# Temperatura média de cada ano
 temp_media_ano <- tapply(cepagri$temp, cepagri$ano, mean)
 
-# Temperatura mÃ©dia de cada mÃªs
+# Temperatura média de cada mÃªs
 temp_media <- tapply(cepagri$temp , cepagri$mes , mean)
 temp_media <- round(temp_media)
 temp_media
@@ -220,7 +220,13 @@ temp_media
 #     2.2 Medidas de posição com a base tratada                #
 #--------------------------------------------------------------#
 summary(cepagri)
-#boxplot
+
+#--------------------------------------------------------------#
+#     2. Analisando dados                                      #
+#--------------------------------------------------------------#
+#                                                              #
+#     2.3 Boxplot                                              #
+#--------------------------------------------------------------#
 cepagriDataByYear <- list()
 i <- 0
 for (ano in unique(cepagri$ano)) {
@@ -239,21 +245,35 @@ for (ano in unique(cepagri$ano)) {
             theme(legend.box.background = element_rect(colour = "black"))
   print(plot)
 }
+
+
+
+#--------------------------------------------------------------#
+#     2. Analisando dados                                      #
+#--------------------------------------------------------------#
+#                                                              #
+#     2.3 Análise de dados por períodos                        #
+#                                                              #
+# Primavera: 21 setembro até 20 dezembro                       #         
+# Verão: 21 dezembro até 20 março                              #
+# Outono: 21 março até 20 junho                                #
+# Inverno: 21 junho até 20 setembro                            #
+##-------------------------------------------------------------#
 #----------------Medidas de Dispersão
 # Desvio padrão
 dp <- c()
 media <- c()
 coef_var <- c()
 for(i in 2:5){
-    #Calculo desvio padrÃ£o para rowunas 2:5
+    #Calculo desvio padrão para rowunas 2:5
     dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
-    #calculo mÃ©dia rowunas 2:5
+    #calculo média rowunas 2:5
     media <-round(c(media, mean(cepagri[,i],na.rm = TRUE)))
 
 }
-#Coeficiente de variaÃ§Ã£o
+#Coeficiente de variação
 coef_var <- round(c(coef_var, (dp/media)*100),2)
-# Tabela que mostra a mÃ©dia, desvio padrÃ£o e coeficiente de variaÃ§Ã£o de cada rowuna
+# Tabela que mostra a média, desvio padrão e coeficiente de variação de cada rowuna
 variaveis <- c('temp','vento','umid','sensa')
 medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
 
@@ -261,7 +281,7 @@ medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
 #-------------------------Histogramas
 # Histograma de cada rowuna
 hist(cepagri$temp, row = 'green', main = 'Histograma Temperatura', xlab = 'Temperatura', ylab = 'FrequÃªncia')
-hist(cepagri$sensa, row = 'red', main = 'Histograma SensaÃ§Ã£o TÃ©rmica', xlab = 'sensaÃ§Ã£o tÃ©rmica', ylab = 'FrequÃªncia')
+hist(cepagri$sensa, row = 'red', main = 'Histograma Sensação Térmica', xlab = 'sensação térmica', ylab = 'FrequÃªncia')
 hist(cepagri$vento, row = 'gray', main = 'Histograma Vento', xlab = 'Vento', ylab = 'FrequÃªncia')
 hist(cepagri$umid, row = 'blue', main = 'Histograma Umidade', xlab = 'Umidade', ylab = 'FrequÃªncia')
 
