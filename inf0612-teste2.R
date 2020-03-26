@@ -267,7 +267,6 @@ hist(cepagri$umid, row = 'blue', main = 'Histograma Umidade', xlab = 'Umidade', 
 
 
 #-------------------------Analisando relacao temperatura umidade e sensacao termica
-library(dplyr)
 cepagri_analise <- cepagri
 
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$temp), ]
@@ -275,22 +274,32 @@ cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$vento), ]
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$sensa), ]
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$umid), ]
 
-dados_grafico2<-group_by(cepagri_analise, mes)%>%summarise(TempMedia=mean(temp), UmidMedia=mean(umid),   SensaMedi=mean(sensa), VentoMedi=mean(vento))
+cepagri_analise_norm = cepagri_analise
+cepagri_analise_norm$temp<-(cepagri_analise_norm$temp-min(cepagri_analise_norm$temp))/(max(cepagri_analise_norm$temp)-min(cepagri_analise_norm$temp))
+cepagri_analise_norm$umid<-(cepagri_analise_norm$umid-min(cepagri_analise_norm$umid))/(max(cepagri_analise_norm$umid)-min(cepagri_analise_norm$umid))
+cepagri_analise_norm$vento<-(cepagri_analise_norm$vento-min(cepagri_analise_norm$vento))/(max(cepagri_analise_norm$vento)-min(cepagri_analise_norm$vento))
+cepagri_analise_norm$sensa<-(cepagri_analise_norm$sensa-min(cepagri_analise_norm$sensa))/(max(cepagri_analise_norm$sensa)-min(cepagri_analise_norm$sensa))
 
-ggplot(dados_grafico2, aes(x = mes)) +
+dados_grafico_normalizado<-group_by(cepagri_analise_norm, mes)%>%summarise(TempMedia=mean(temp), UmidMedia=mean(umid),   SensaMedi=mean(sensa), VentoMedi=mean(vento))
+dados_tabela_nao_normalizado<-group_by(cepagri_analise, mes)%>%summarise(TempMedia=mean(temp), UmidMedia=mean(umid),   SensaMedi=mean(sensa), VentoMedi=mean(vento))
+
+dados_tabela_nao_normalizado$dif_temp_sensa<-dados_tabela_nao_normalizado$TempMedia-dados_tabela_nao_normalizado$SensaMedi
+dados_tabela_nao_normalizado
+
+ggplot(dados_grafico_normalizado, aes(x = mes)) +
   geom_point(aes(y = TempMedia, colour = "Temperatura media")) +
   geom_line(aes(y = TempMedia, colour = "Temperatura media")) +
-
+  
   geom_point(aes(y = UmidMedia, colour = "Umidade media")) +
   geom_line(aes(y = UmidMedia, colour = "Umidade media")) +
-
+  
   geom_point(aes(y = SensaMedi, colour = "Sensacao media")) +
   geom_line(aes(y = SensaMedi, colour = "Sensacao media")) +
-
+  
   geom_point(aes(y = VentoMedi, colour = "Velocidade Vento media")) +
   geom_line(aes(y = VentoMedi, colour = "Velocidade Vento media")) +
-
-
+  
+  
   theme_light() +
   labs(colour = element_blank(),
        title = "Comparativo dos valores medios ao mes de todo periodo") +
@@ -300,17 +309,14 @@ ggplot(dados_grafico2, aes(x = mes)) +
   scale_x_continuous(name = "mes", limits = c(1, 12),
                      breaks =  0:12,
                      minor_breaks = NULL) +
-  scale_y_continuous(name = "Valor", limits = c(0, 100),
-                     breaks = 10 * 0:10,
+  scale_y_continuous(name = "Valor", limits = c(0, 1),
                      minor_breaks = NULL)
 
 
-dados_grafico2
 
-#É possível observar que a sensação termica média durante os meses sempre é mais baixa que a temperatura média. Nos
-#meses de verão , 1,2,3 e 12, em que as temperaturas são mais altas e a velocidade de vento média é mais baixa,
-#a diferença entre a sensação termica e a temperatura tende a ser menor.
-#Nos meses de inverno, apresentou uma maior variação, principalmente quando a umidade media era um pouco mais baixa
+
+
+
 
 #-------------------------Analisando estacoes verao e inverno
 
