@@ -213,9 +213,12 @@ temp_media <- tapply(cepagri$temp , cepagri$mes , mean)
 temp_media <- round(temp_media)
 temp_media
 
-#-----------------------------------------------#
-#     Medidas de posição com a base tratada     #
-#-----------------------------------------------#
+#--------------------------------------------------------------#
+#     2. Analisando dados                                      #
+#--------------------------------------------------------------#
+#                                                              #
+#     2.2 Medidas de posição com a base tratada                #
+#--------------------------------------------------------------#
 summary(cepagri)
 #boxplot
 cepagriDataByYear <- list()
@@ -236,9 +239,8 @@ for (ano in unique(cepagri$ano)) {
             theme(legend.box.background = element_rect(colour = "black"))
   print(plot)
 }
-#----------------Medidas de DispersÃ£o
-
-# Desvio padrÃ£o
+#----------------Medidas de Dispersão
+# Desvio padrão
 dp <- c()
 media <- c()
 coef_var <- c()
