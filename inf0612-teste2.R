@@ -1,5 +1,5 @@
 #--------------------------------------------------------------#
-# INF-0612 An·lise de dados                                    #
+# INF-0612 An?lise de dados                                    #
 #                                                              #
 # Projeto final                                                #
 #--------------------------------------------------------------#
@@ -33,13 +33,11 @@ library(dplyr)
 # vari√°vel attr. Os Valores poss√≠veis para
 # os atributos s√£o mes e ano.
 getYears <- function(col) {
-  year <- as.POSIXlt(col)
-  year <- unclass(year)$year + 1900
+  unclass(col)$year + 1900
 }
 
 getMonths <- function(col) {
-  month <- as.POSIXlt(col)
-  month <- unclass(month)$mon + 1
+  unclass(col)$mon + 1
 }
 
 getDay <- function(col) {
@@ -47,10 +45,17 @@ getDay <- function(col) {
   day <- unclass(day)$mday
 }
 
-filterBy <- function(attr, df, interval) {
-  df$ano <-getYears(df$horario)
-  df$mes <- getMonths(df$horario)
+addDateColumns <- function(df) {
+  date <- as.POSIXlt(df$horario)
+  df$ano <- unclass(date)$year + 1900
+  df$mes <- unclass(date)$mon + 1
+  df$dia <- unclass(date)$mday
+  return(df)
+}
 
+filterBy <- function(attr, df, interval) {
+  date <- as.POSIXlt(df$horario)
+  if (attr == "ano") df$ano <- getYears(date) else df$mes <- getMonths(date)
   df<-df[df$attr %in% interval,]
   print(df)
 }
@@ -156,7 +161,7 @@ cepagri$horario <- as.POSIXct(
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
-#     1.6 An·lise de registros duplicados                       #
+#     1.6 An?lise de registros duplicados                       #
 #         Valores repetidos durante dias consectivos           #
 #--------------------------------------------------------------#
 # filtra os valores recorrentes em 144 dias consecutivos
@@ -169,7 +174,7 @@ sort(cepagri[cepagri$vento < 5,3])
 #ocorrem valores proximos de 0, entao 0 parece um valor valido
 #sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
 #-----------------------------------------------#
-#        An·lise registros duplicados          #
+#        An?lise registros duplicados          #
 #-----------------------------------------------#
 
 #install.packages('tidyverse')
@@ -198,8 +203,8 @@ intervalo <- list(2015, 2016, 2017, 2018, 2019)
 filterByYear <- filterBy("ano", cepagri, intervalo)
 filterByMonth <- filterBy("mes", cepagri, intervalo)
 
-cepagri$ano <- getYears(cepagri$horario)
-cepagri$mes <- getMonths(cepagri$horario)
+# adiciona colunas de dia, mes e ano
+cepagri <- addDateColumns(cepagri)
 
 # Temperatura m√©dia de cada ano
 temp_media_ano <- tapply(cepagri$temp, cepagri$ano, mean)
@@ -208,7 +213,6 @@ temp_media_ano <- tapply(cepagri$temp, cepagri$ano, mean)
 temp_media <- tapply(cepagri$temp , cepagri$mes , mean)
 temp_media <- round(temp_media)
 temp_media
-
 
 #-----------------------------------------------#
 #     Medidas de posi√ß√£o com a base tratada     #
@@ -307,10 +311,10 @@ ggplot(dados_grafico2, aes(x = mes)) +
 
 dados_grafico2
 
-#… possÌvel observar que a sensaÁ„o termica mÈdia durante os meses sempre È mais baixa que a temperatura mÈdia. Nos
-#meses de ver„o , 1,2,3 e 12, em que as temperaturas s„o mais altas e a velocidade de vento mÈdia È mais baixa,
-#a diferenÁa entre a sensaÁ„o termica e a temperatura tende a ser menor.
-#Nos meses de inverno, apresentou uma maior variaÁ„o, principalmente quando a umidade media era um pouco mais baixa
+#? poss?vel observar que a sensa??o termica m?dia durante os meses sempre ? mais baixa que a temperatura m?dia. Nos
+#meses de ver?o , 1,2,3 e 12, em que as temperaturas s?o mais altas e a velocidade de vento m?dia ? mais baixa,
+#a diferen?a entre a sensa??o termica e a temperatura tende a ser menor.
+#Nos meses de inverno, apresentou uma maior varia??o, principalmente quando a umidade media era um pouco mais baixa
 
 #-------------------------Analisando estacoes verao e inverno
 cepagri_analise <- cepagri
