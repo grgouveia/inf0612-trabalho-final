@@ -1,5 +1,5 @@
 #--------------------------------------------------------------#
-# INF-0612 AnÃ¡lise de dados                                    #
+# INF-0612 Análise de dados                                    #
 #                                                              #
 # Projeto final                                                #
 #--------------------------------------------------------------#
@@ -22,7 +22,6 @@
 #--------------------------------------------------------------#
 setwd('/home/grgouveia/studies/mdc/INF-0612-I/trabalho-final')
 
-
 install.packages('tidyverse')
 library(tidyverse)
 library(ggplot2)
@@ -33,16 +32,21 @@ library(dplyr)
 # ou mÃªs, sendo estes critÃ©rios definidos pela
 # variÃ¡vel attr. Os Valores possÃ­veis para
 # os atributos sÃ£o mes e ano.
-filterBy <- function(attr, df, interval) {
-  df$horario <- as.POSIXlt(df$horario)
-  df$ano <- unclass(df$horario)$year + 1900
-  df$mes <- unclass(df$horario)$mon + 1
+getYears <- function(col) {
+  year <- as.POSIXlt(col)
+  year <- unclass(year)$year + 1900
+}
 
-  if(attr == "ano" ){
-    df<-df[df$ano %in% interval,]
-  } else {
-    df<-df[df$mes %in% interval,]
-  }
+getMonths <- function(col) {
+  month <- as.POSIXlt(col)
+  month <- unclass(month)$mon + 1
+}
+
+filterBy <- function(attr, df, interval) {
+  df$ano <-getYears(df$horario)
+  df$mes <- getMonths(df$horario)
+
+  df<-df[df$attr %in% interval,]
   print(df)
 }
 
@@ -82,18 +86,6 @@ close(con)
 
 #Observacao dos dados
 summary(cepagri)
-
-#Filtrar pelos dados do enuncionado do trabalho, para isso criar as rowunas ano e mes e aplicar o filtro
-
-cepagri$horario <- as.POSIXct(as.character(cepagri$horario), format = '%d/%m/%Y-%H:%M')
-cepagri$horario <- as.POSIXlt(cepagri$horario)
-cepagri$ano <- unclass(cepagri$horario)$year + 1900
-cepagri$mes <- unclass(cepagri$horario)$mon + 1
-cepagri$dia <- unclass(cepagri$horario)$mday
-
-intervalo <- list(2015, 2016, 2017, 2018, 2019)
-cepagri<-cepagri[cepagri$ano %in% intervalo,]
-
 
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
@@ -159,7 +151,7 @@ cepagri$horario <- as.POSIXct(
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
-#     1.6 AnÃ¡lise registros duplicados                         #
+#     1.6 Análise de registros duplicados                       #
 #         Valores repetidos durante dias consectivos           #
 #--------------------------------------------------------------#
 # filtra os valores recorrentes em 144 dias consecutivos
@@ -171,9 +163,8 @@ summary(cepagri$vento)
 sort(cepagri[cepagri$vento < 5,3])
 #ocorrem valores proximos de 0, entao 0 parece um valor valido
 #sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
-
 #-----------------------------------------------#
-#        AnÃ¡lise registros duplicados          #
+#        Análise registros duplicados          #
 #-----------------------------------------------#
 
 #install.packages('tidyverse')
@@ -195,15 +186,15 @@ cepagri[duplicated(cepagri),]
 #--------------------------------------------------------------#
 #     2. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     2.1 Agrupando dados por mÃªs e ano                        #
+#     2.1 Agrupando dados por mÃªs e ano                       #
 #      Filtro de dados agrupados com base em intervalos        #
-#                                                              #
 #--------------------------------------------------------------#
-# Filtrando os dados agrupados por mÃªs dentro do
-# intervalo indicado
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 filterByYear <- filterBy("ano", cepagri, intervalo)
 filterByMonth <- filterBy("mes", cepagri, intervalo)
+
+cepagri$ano <- getYears(cepagri$horario)
+cepagri$mes <- getMonths(cepagri$horario)
 
 # Temperatura mÃ©dia de cada ano
 temp_media_ano <- tapply(cepagri$temp, cepagri$ano, mean)
@@ -222,40 +213,25 @@ summary(cepagri)
 ##########################################################
 ##  O cÃ³digo do Boxplot pode ser melhorado e otimizado  ##
 ##########################################################
-
 #boxplot
-cepagri2015 <- cepagri[cepagri$ano == 2015, ]
-cepagri2016 <- cepagri[cepagri$ano == 2016, ]
-cepagri2017 <- cepagri[cepagri$ano == 2017, ]
-cepagri2018 <- cepagri[cepagri$ano == 2018, ]
-cepagri2019 <- cepagri[cepagri$ano == 2019, ]
+cepagriDataByYear <- list()
+i <- 0
+for (ano in unique(cepagri$ano)) {
+  cepagriDataByYear[[i <- i+1]] <- cepagri[cepagri$ano == ano, ]
+  cepagriDataByYear[[i]]$mes <- as.factor(cepagriDataByYear[[i]]$mes)
 
-
-cepagri2015$mes <- as.factor(cepagri2015$mes)
-cepagri2016$mes <- as.factor(cepagri2016$mes)
-cepagri2017$mes <- as.factor(cepagri2017$mes)
-cepagri2018$mes <- as.factor(cepagri2018$mes)
-cepagri2019$mes <- as.factor(cepagri2019$mes)
-
-ggplot(cepagri2015,
-       aes(x = mes , y = temp , group = mes)) +
-    geom_boxplot ()
-
-ggplot(cepagri2016,
-       aes(x = mes , y = temp , group = mes)) +
-    geom_boxplot ()
-
-ggplot(cepagri2017,
-       aes(x = mes , y = temp , group = mes)) +
-    geom_boxplot ()
-
-ggplot(cepagri2018,
-       aes(x = mes , y = temp , group = mes)) +
-    geom_boxplot ()
-
-ggplot(cepagri2019,
-       aes(x = mes , y = temp , group = mes)) +
-    geom_boxplot ()
+  title <- paste("Temperatura no ano de", ano)
+  plot <- ggplot(cepagriDataByYear[[i]],
+            aes(x = mes , y = temp , group = mes)) +
+            geom_boxplot () +
+            theme_light() +
+            labs(colour = element_blank(),
+                title = title) +
+            theme(plot.title = element_text(hjust = 0.5)) +
+            theme(legend.position = c(0.5, 0.15)) +
+            theme(legend.box.background = element_rect(colour = "black"))
+  print(plot)
+}
 
 #----------------Medidas de DispersÃ£o
 
@@ -294,10 +270,7 @@ cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$vento), ]
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$sensa), ]
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$umid), ]
 
-
-
 dados_grafico2<-group_by(cepagri_analise, mes)%>%summarise(TempMedia=mean(temp), UmidMedia=mean(umid),   SensaMedi=mean(sensa), VentoMedi=mean(vento))
-
 
 ggplot(dados_grafico2, aes(x = mes)) +
   geom_point(aes(y = TempMedia, colour = "Temperatura media")) +
@@ -334,22 +307,11 @@ dados_grafico2
 #a diferença entre a sensação termica e a temperatura tende a ser menor.
 #Nos meses de inverno, apresentou uma maior variação, principalmente quando a umidade media era um pouco mais baixa
 
-
-
 #-------------------------Analisando estacoes verao e inverno
-
-
 cepagri_analise <- cepagri
-
-
-
 
 cepagri_verao<-cepagri_analise[((cepagri_analise$mes==12&cepagri_analise$dia>=21) | (cepagri_analise$mes==1) | (cepagri_analise$mes==2) |  (cepagri_analise$mes==3 & cepagri_analise$dia<=20)),]
 cepagri_inverno<-cepagri_analise[((cepagri_analise$mes==6&cepagri_analise$dia>=21) | (cepagri_analise$mes==7) | (cepagri_analise$mes==8) |  (cepagri_analise$mes==9 & cepagri_analise$dia<=20)),]
-
-
-
-
 #-------------------------Analise forca vento pela temperatura
 
 cepagri_vt <- cepagri
@@ -357,8 +319,6 @@ cepagri_vt <- cepagri
 #removendo na que podem ter sido colocado no tratamento de dados pois como a analise nao e temporal, interessa apenas os valores
 cepagri_vt <- cepagri_vt[!is.na(cepagri_vt$temp), ]
 cepagri_vt <- cepagri_vt[!is.na(cepagri_vt$vento), ]
-
-
 
 cepagri_vt_verao<-cepagri_vt[((cepagri_vt$mes==12&cepagri_vt$dia>=21) | (cepagri_vt$mes==1) | (cepagri_vt$mes==2) |  (cepagri_vt$mes==3 & cepagri_vt$dia<=20)),]
 cepagri_vt_inverno<-cepagri_vt[((cepagri_vt$mes==6&cepagri_vt$dia>=21) | (cepagri_vt$mes==7) | (cepagri_vt$mes==8) |  (cepagri_vt$mes==9 & cepagri_vt$dia<=20)),]
@@ -395,20 +355,6 @@ summary(cepagri_vt$vento)
 cepagri_vt$escala_vento <-  ifelse(cepagri_vt$vento > 17, ifelse(cepagri_vt$vento > 37.7, "forte", "medio"), "fraco")
 
 ggplot(cepagri_vt, aes(x = temp, fill = escala_vento)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
-# considerando todos os meses dos anos analisados, a frequencia de ventos ocorre entre as temperaturas de 15 a 25 graus, 
+# considerando todos os meses dos anos analisados, a frequencia de ventos ocorre entre as temperaturas de 15 a 25 graus,
 #sendo um pouco menor a ocorrência de ventos fortes a temperatura acima de 25 graus, podendo concluir que o vento
 #afeta a temperatura baixando-a???
-
-
-
-
-
-
-
-
-
-
-
-
-
-
