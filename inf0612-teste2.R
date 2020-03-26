@@ -42,6 +42,11 @@ getMonths <- function(col) {
   month <- unclass(month)$mon + 1
 }
 
+getDay <- function(col) {
+  day <- as.POSIXlt(col)
+  day <- unclass(day)$mday 
+}
+
 filterBy <- function(attr, df, interval) {
   df$ano <-getYears(df$horario)
   df$mes <- getMonths(df$horario)
@@ -309,52 +314,57 @@ dados_grafico2
 
 #-------------------------Analisando estacoes verao e inverno
 cepagri_analise <- cepagri
+cepagri_analise$dia<-getDay(cepagri_analise$horario)
 
 cepagri_verao<-cepagri_analise[((cepagri_analise$mes==12&cepagri_analise$dia>=21) | (cepagri_analise$mes==1) | (cepagri_analise$mes==2) |  (cepagri_analise$mes==3 & cepagri_analise$dia<=20)),]
 cepagri_inverno<-cepagri_analise[((cepagri_analise$mes==6&cepagri_analise$dia>=21) | (cepagri_analise$mes==7) | (cepagri_analise$mes==8) |  (cepagri_analise$mes==9 & cepagri_analise$dia<=20)),]
+
 #-------------------------Analise forca vento pela temperatura
 
 cepagri_vt <- cepagri
+cepagri_vt$dia<-getDay(cepagri_vt$horario)
 
 #removendo na que podem ter sido colocado no tratamento de dados pois como a analise nao e temporal, interessa apenas os valores
 cepagri_vt <- cepagri_vt[!is.na(cepagri_vt$temp), ]
 cepagri_vt <- cepagri_vt[!is.na(cepagri_vt$vento), ]
+
+#Para a escala de temperatura, foi utilizado valores padrao de frio abaixo de 19 graus, temperatura media entre 19 e 27 graus e calor acima de 27, muito calor acima de 31 graus
+cepagri_vt$escala_temp <-  ifelse(cepagri_vt$temp > 19, ifelse(cepagri_vt$temp > 27, ifelse(cepagri_vt$temp > 31, "muito calor", "calor"), "normal"), "frio")
+
+#Para os valores da escala de vento, foi utilizado os valores separados dos quartes dos dataset de verao, inverno e geral, fazendo uma media
+cepagri_vt$escala_vento <-  ifelse(cepagri_vt$vento > 17, ifelse(cepagri_vt$vento > 36, "forte", "medio"), "fraco")
 
 cepagri_vt_verao<-cepagri_vt[((cepagri_vt$mes==12&cepagri_vt$dia>=21) | (cepagri_vt$mes==1) | (cepagri_vt$mes==2) |  (cepagri_vt$mes==3 & cepagri_vt$dia<=20)),]
 cepagri_vt_inverno<-cepagri_vt[((cepagri_vt$mes==6&cepagri_vt$dia>=21) | (cepagri_vt$mes==7) | (cepagri_vt$mes==8) |  (cepagri_vt$mes==9 & cepagri_vt$dia<=20)),]
 
 #verao
 summary(cepagri_vt_verao$vento)
-
-#a escala foi montada de acordo com os valores dos quarter
-cepagri_vt_verao$escala_vento <-  ifelse(cepagri_vt_verao$vento > 16, ifelse(cepagri_vt_verao$vento > 32.5, "forte", "medio"), "fraco")
+summary(cepagri_vt_verao$inverno)
 
 ggplot(cepagri_vt_verao, aes(x = temp, fill = escala_vento)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
-
 #analisando o grafico eh possivel ver que quando mais ocorrem ventos, as temperaturas ficam em torno de 20 a 25 graus e nas temperaturas
-#altas, ocorrem uma quantidade menor de ventos de forma geral, prevalecendo ventos em velocidade media
-
-
-#inverno
-
-summary(cepagri_vt_inverno$vento)
-
-#a escala foi montada de acordo com os valores dos quarter
-cepagri_vt_inverno$escala_vento <-  ifelse(cepagri_vt_inverno$vento > 17.7, ifelse(cepagri_vt_inverno$vento > 38.9, "forte", "medio"), "fraco")
+#altas, ocorrem uma quantidade menor de ventos de forma geral, prevalecendo ventos em velocidade media e pouquissimos ventos fortes no verao
 
 ggplot(cepagri_vt_inverno, aes(x = temp, fill = escala_vento)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
-
-#no inverno, também ocorre com mais frequencia vento a temperatura entre 15 a 25 graus, sendo que entre 15 a 25 tem uma grande proporcao de ventos fortes
+#no inverno, tambem ocorre com mais frequencia vento a temperatura entre 15 a 25 graus, sendo que entre 15 a 25 tem uma grande proporcao de ventos fortes
 #nessa epoca do ano
 
-
-#todos
-summary(cepagri_vt$vento)
-
-#a escala foi montada de acordo com os valores dos quarter
-cepagri_vt$escala_vento <-  ifelse(cepagri_vt$vento > 17, ifelse(cepagri_vt$vento > 37.7, "forte", "medio"), "fraco")
-
 ggplot(cepagri_vt, aes(x = temp, fill = escala_vento)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
-# considerando todos os meses dos anos analisados, a frequencia de ventos ocorre entre as temperaturas de 15 a 25 graus,
-#sendo um pouco menor a ocorrência de ventos fortes a temperatura acima de 25 graus, podendo concluir que o vento
-#afeta a temperatura baixando-a???
+# considerando todos os meses dos anos analisados, a frequencia de ventos ocorre entre as temperaturas de 15 a 25 graus, 
+#sendo um pouco menor a ocorria de ventos fortes a temperatura acima de 25 graus diminuindo conforme a temperatura eleva. 
+
+
+#analisando de forma inversa, consideranto agora a escala da temperatura
+
+ggplot(cepagri_vt_verao, aes(x = vento, fill = escala_temp)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
+#analisando o grafico eh possivel ver que quando mais ocorrem ventos, as temperaturas ficam em torno de 15 a 25 graus e conforme
+# a velocidade do vendo maior, as temperaturas tendem a ficar no intervalo de 20 a 27 graus. Provalvemente ventos fortes
+# amenizam a temperatura, pois como o dado analisado verao e esperado um valor alto de temperaturas calor e muito calor
+
+ggplot(cepagri_vt_inverno, aes(x = vento, fill = escala_temp)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
+#no inverno, onde e esperado normalmente temperaturas mais baixas, e possivel ver que se a velocidade do vento esta alta, 
+#aparecem pouquissimos casos de temperatura calor
+
+ggplot(cepagri_vt, aes(x = vento, fill = escala_temp)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
+#considerando todo o periodo, ve se que a partir de ventos a 60km/h nao temos registros de temperatura altas, calor ou muito calor. 
+
