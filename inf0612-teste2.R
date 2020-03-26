@@ -350,6 +350,62 @@ cepagri_inverno<-cepagri_analise[((cepagri_analise$mes==6&cepagri_analise$dia>=2
 
 
 
+#-------------------------Analise forca vento pela temperatura
+
+cepagri_vt <- cepagri
+
+#removendo na que podem ter sido colocado no tratamento de dados pois como a analise nao e temporal, interessa apenas os valores
+cepagri_vt <- cepagri_vt[!is.na(cepagri_vt$temp), ]
+cepagri_vt <- cepagri_vt[!is.na(cepagri_vt$vento), ]
+
+
+
+cepagri_vt_verao<-cepagri_vt[((cepagri_vt$mes==12&cepagri_vt$dia>=21) | (cepagri_vt$mes==1) | (cepagri_vt$mes==2) |  (cepagri_vt$mes==3 & cepagri_vt$dia<=20)),]
+cepagri_vt_inverno<-cepagri_vt[((cepagri_vt$mes==6&cepagri_vt$dia>=21) | (cepagri_vt$mes==7) | (cepagri_vt$mes==8) |  (cepagri_vt$mes==9 & cepagri_vt$dia<=20)),]
+
+#verao
+summary(cepagri_vt_verao$vento)
+
+#a escala foi montada de acordo com os valores dos quarter
+cepagri_vt_verao$escala_vento <-  ifelse(cepagri_vt_verao$vento > 16, ifelse(cepagri_vt_verao$vento > 32.5, "forte", "medio"), "fraco")
+
+ggplot(cepagri_vt_verao, aes(x = temp, fill = escala_vento)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
+
+#analisando o grafico eh possivel ver que quando mais ocorrem ventos, as temperaturas ficam em torno de 20 a 25 graus e nas temperaturas
+#altas, ocorrem uma quantidade menor de ventos de forma geral, prevalecendo ventos em velocidade media
+
+
+#inverno
+
+summary(cepagri_vt_inverno$vento)
+
+#a escala foi montada de acordo com os valores dos quarter
+cepagri_vt_inverno$escala_vento <-  ifelse(cepagri_vt_inverno$vento > 17.7, ifelse(cepagri_vt_inverno$vento > 38.9, "forte", "medio"), "fraco")
+
+ggplot(cepagri_vt_inverno, aes(x = temp, fill = escala_vento)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
+
+#no inverno, também ocorre com mais frequencia vento a temperatura entre 15 a 25 graus, sendo que entre 15 a 25 tem uma grande proporcao de ventos fortes
+#nessa epoca do ano
+
+
+#todos
+summary(cepagri_vt$vento)
+
+#a escala foi montada de acordo com os valores dos quarter
+cepagri_vt$escala_vento <-  ifelse(cepagri_vt$vento > 17, ifelse(cepagri_vt$vento > 37.7, "forte", "medio"), "fraco")
+
+ggplot(cepagri_vt, aes(x = temp, fill = escala_vento)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
+# considerando todos os meses dos anos analisados, a frequencia de ventos ocorre entre as temperaturas de 15 a 25 graus, 
+#sendo um pouco menor a ocorrência de ventos fortes a temperatura acima de 25 graus, podendo concluir que o vento
+#afeta a temperatura baixando-a???
+
+
+
+
+
+
+
+
 
 
 
