@@ -1,5 +1,4 @@
-#--------------------------------------------------------------#
-# INF-0612 An?lise de dados                                    #
+# INF-0612 Análise de dados                                    #
 #                                                              #
 # Projeto final                                                #
 #--------------------------------------------------------------#
@@ -9,7 +8,7 @@
 # Nome COMPLETO Aluna (o) 2: Marina Abichabki                  #
 #                                     Pivato                   #
 #                                                              #
-# Nome COMPLETO Aluna (o) 3: Paola São Thiago                  #
+# Nome COMPLETO Aluna (o) 3: Paola SÃ£o Thiago                  #
 #                                                              #
 #                                                              #
 # Nome COMPLETO Aluna (o) 4:                                   #
@@ -18,7 +17,7 @@
 #--------------------------------------------------------------#
 
 #--------------------------------------------------------------#
-#     Configuracao dos arquivos, libs e funções auxiliares     #
+#     Configuracao dos arquivos, libs e funÃ§Ãµes auxiliares     #
 #--------------------------------------------------------------#
 setwd('/home/grgouveia/studies/mdc/INF-0612-I/trabalho-final')
 
@@ -29,9 +28,9 @@ library(dplyr)
 
 # Filtra o dataframe (df) passado como argumento
 # de acordo com um intervalo (interval) em ano
-# ou mês, sendo estes critérios definidos pela
-# variável attr. Os Valores possíveis para
-# os atributos são mes e ano.
+# ou mÃªs, sendo estes critÃ©rios definidos pela
+# variÃ¡vel attr. Os Valores possÃ­veis para
+# os atributos sÃ£o mes e ano.
 getYears <- function(col) {
   unclass(col)$year + 1900
 }
@@ -60,13 +59,13 @@ filterBy <- function(attr, df, interval) {
   print(df)
 }
 
-# checa se o valor da linha é NA
+# checa se o valor da linha Ã© NA
 is_na <- function(row){
   any(is.na(row))
 }
 
-# analisa se os dados nas k posições à frente e atràs da
-# posição especificada são repetidos para encontrar
+# analisa se os dados nas k posiÃ§Ãµes Ã  frente e atrÃ s da
+# posiÃ§Ã£o especificada sÃ£o repetidos para encontrar
 # valores consecutivos repetidos
 consecutive <- function(vector, k = 1) {
   n <- length(vector)
@@ -112,7 +111,7 @@ if (na_percent > 0) {
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
-#     1.3 Corrigindo coerções implícitas indesejadas           #
+#     1.3 Corrigindo coerÃ§Ãµes implÃ­citas indesejadas           #
 #--------------------------------------------------------------#
 for (i in 2:length(cepagri)) {
   aux <- cepagri[,i]
@@ -161,7 +160,7 @@ cepagri$horario <- as.POSIXct(
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
-#     1.6 An?lise de registros duplicados                       #
+#     1.6 Análise de registros duplicados                      #
 #         Valores repetidos durante dias consectivos           #
 #--------------------------------------------------------------#
 # filtra os valores recorrentes em 144 dias consecutivos
@@ -174,7 +173,7 @@ sort(cepagri[cepagri$vento < 5,3])
 #ocorrem valores proximos de 0, entao 0 parece um valor valido
 #sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
 #-----------------------------------------------#
-#        An?lise registros duplicados          #
+#        Análise registros duplicados           #
 #-----------------------------------------------#
 
 #install.packages('tidyverse')
@@ -196,7 +195,7 @@ cepagri[duplicated(cepagri),]
 #--------------------------------------------------------------#
 #     2. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     2.1 Agrupando dados por mês e ano                       #
+#     2.1 Agrupando dados por mês e ano                        #
 #      Filtro de dados agrupados com base em intervalos        #
 #--------------------------------------------------------------#
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
@@ -206,10 +205,10 @@ filterByMonth <- filterBy("mes", cepagri, intervalo)
 # adiciona colunas de dia, mes e ano
 cepagri <- addDateColumns(cepagri)
 
-# Temperatura média de cada ano
+# Temperatura mÃ©dia de cada ano
 temp_media_ano <- tapply(cepagri$temp, cepagri$ano, mean)
 
-# Temperatura média de cada mês
+# Temperatura mÃ©dia de cada mÃªs
 temp_media <- tapply(cepagri$temp , cepagri$mes , mean)
 temp_media <- round(temp_media)
 temp_media
@@ -218,10 +217,6 @@ temp_media
 #     Medidas de posição com a base tratada     #
 #-----------------------------------------------#
 summary(cepagri)
-
-##########################################################
-##  O código do Boxplot pode ser melhorado e otimizado  ##
-##########################################################
 #boxplot
 cepagriDataByYear <- list()
 i <- 0
@@ -241,33 +236,32 @@ for (ano in unique(cepagri$ano)) {
             theme(legend.box.background = element_rect(colour = "black"))
   print(plot)
 }
+#----------------Medidas de DispersÃ£o
 
-#----------------Medidas de Dispersão
-
-# Desvio padrão
+# Desvio padrÃ£o
 dp <- c()
 media <- c()
 coef_var <- c()
 for(i in 2:5){
-    #Calculo desvio padrão para rowunas 2:5
+    #Calculo desvio padrÃ£o para rowunas 2:5
     dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
-    #calculo média rowunas 2:5
+    #calculo mÃ©dia rowunas 2:5
     media <-round(c(media, mean(cepagri[,i],na.rm = TRUE)))
 
 }
-#Coeficiente de variação
+#Coeficiente de variaÃ§Ã£o
 coef_var <- round(c(coef_var, (dp/media)*100),2)
-# Tabela que mostra a média, desvio padrão e coeficiente de variação de cada rowuna
+# Tabela que mostra a mÃ©dia, desvio padrÃ£o e coeficiente de variaÃ§Ã£o de cada rowuna
 variaveis <- c('temp','vento','umid','sensa')
 medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
 
 
 #-------------------------Histogramas
 # Histograma de cada rowuna
-hist(cepagri$temp, row = 'green', main = 'Histograma Temperatura', xlab = 'Temperatura', ylab = 'Frequência')
-hist(cepagri$sensa, row = 'red', main = 'Histograma Sensação Térmica', xlab = 'sensação térmica', ylab = 'Frequência')
-hist(cepagri$vento, row = 'gray', main = 'Histograma Vento', xlab = 'Vento', ylab = 'Frequência')
-hist(cepagri$umid, row = 'blue', main = 'Histograma Umidade', xlab = 'Umidade', ylab = 'Frequência')
+hist(cepagri$temp, row = 'green', main = 'Histograma Temperatura', xlab = 'Temperatura', ylab = 'FrequÃªncia')
+hist(cepagri$sensa, row = 'red', main = 'Histograma SensaÃ§Ã£o TÃ©rmica', xlab = 'sensaÃ§Ã£o tÃ©rmica', ylab = 'FrequÃªncia')
+hist(cepagri$vento, row = 'gray', main = 'Histograma Vento', xlab = 'Vento', ylab = 'FrequÃªncia')
+hist(cepagri$umid, row = 'blue', main = 'Histograma Umidade', xlab = 'Umidade', ylab = 'FrequÃªncia')
 
 
 #-------------------------Analisando relacao temperatura umidade e sensacao termica
@@ -311,17 +305,60 @@ ggplot(dados_grafico2, aes(x = mes)) +
 
 dados_grafico2
 
-#? poss?vel observar que a sensa??o termica m?dia durante os meses sempre ? mais baixa que a temperatura m?dia. Nos
-#meses de ver?o , 1,2,3 e 12, em que as temperaturas s?o mais altas e a velocidade de vento m?dia ? mais baixa,
-#a diferen?a entre a sensa??o termica e a temperatura tende a ser menor.
-#Nos meses de inverno, apresentou uma maior varia??o, principalmente quando a umidade media era um pouco mais baixa
+#É possível observar que a sensação termica média durante os meses sempre é mais baixa que a temperatura média. Nos
+#meses de verão , 1,2,3 e 12, em que as temperaturas são mais altas e a velocidade de vento média é mais baixa,
+#a diferença entre a sensação termica e a temperatura tende a ser menor.
+#Nos meses de inverno, apresentou uma maior variação, principalmente quando a umidade media era um pouco mais baixa
 
 #-------------------------Analisando estacoes verao e inverno
+
+#-------------------------------------------------------------------------------------------------------------------------#
+# Obs: da forma como foi feito, está sendo considerado como verão de 2015, por exemplo, os meses 01,02,03 e 12 de 2015.   #
+# Mas, o mês 12 de 2015 faz parte do verão de 2016                                                                        #
+#-------------------------------------------------------------------------------------------------------------------------#
 cepagri_analise <- cepagri
 cepagri_analise$dia<-getDay(cepagri_analise$horario)
 
 cepagri_verao<-cepagri_analise[((cepagri_analise$mes==12&cepagri_analise$dia>=21) | (cepagri_analise$mes==1) | (cepagri_analise$mes==2) |  (cepagri_analise$mes==3 & cepagri_analise$dia<=20)),]
 cepagri_inverno<-cepagri_analise[((cepagri_analise$mes==6&cepagri_analise$dia>=21) | (cepagri_analise$mes==7) | (cepagri_analise$mes==8) |  (cepagri_analise$mes==9 & cepagri_analise$dia<=20)),]
+#-----------------------------------------------------------------------------------------#
+#Gráficos de linhas para avaliar o comportamento da temperatura e sensação termica por dia durante o verão e inverno
+#-----------------------------------------------------------------------------------------#
+# média da temperatura e sensação termica da dia durante um determinada ano no período do #verão
+#média da temperatura e sensação termica da dia durante um determinada ano no período do inverno
+
+# Gera outro dataframe, transforma as colunas ano, mês e dia para o formato Date e agrupa em uma coluna
+cepagri_verao2 <- cepagri_verao
+cepagri_verao2$data <- as.Date(paste(cepagri_verao2$ano, cepagri_verao2$mes, cepagri_verao2$dia, sep = "-"))
+
+#Seta para todos os anos o intervalo de tempo do verão
+dados_verao_2015 <- cepagri_verao2[(cepagri_verao2$data >= '2014-12-21' & cepagri_verao2$data <= '2015-3-21'),]
+dados_verao_2016 <- cepagri_verao2[(cepagri_verao2$data >= '2015-12-21' & cepagri_verao2$data <= '2016-3-21'),]
+dados_verao_2017 <- cepagri_verao2[(cepagri_verao2$data >= '2016-12-21' & cepagri_verao2$data <= '2017-3-21'),]
+dados_verao_2018 <- cepagri_verao2[(cepagri_verao2$data >= '2017-12-21' & cepagri_verao2$data <= '2018-3-21'),]
+dados_verao_2019 <- cepagri_verao2[(cepagri_verao2$data >= '2018-12-21' & cepagri_verao2$data <= '2019-3-21'),]
+
+media_verao_temp_sensa <- group_by(dados_ver_inv_2017, data)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa))
+
+grafico_temp_sensa <- function(df, titulo)
+{
+    media_verao_temp_sensa <- group_by(df, data)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa))
+    ggplot(media_verao_temp_sensa, aes(x=data)) +
+    geom_line(aes(y=TempMedia,colour = "Temperatura Média")) +
+    geom_line(aes(y=SensaMedia, colour = "Sensação Termica Média")) +
+    scale_colour_manual('', breaks = c('Temperatura Média', 'Sensação Termica Média'), values = c('red', 'blue')) +
+    theme(legend.position = 'botton') +
+    scale_x_date(NULL, date_labels <- "%b/%y", date_breaks <- "4 week") +
+    theme(axis.text.x=element_text(angle = 60, hjust=1, size = 11, face = 'bold')) +
+    ylab("Temperatura (C°)") +
+    ggtitle(titulo)
+}
+
+grafico_temp_sensa(dados_verao_2015, 'Temperatura média e Sensação Térmica média durante o verão e o inverno de 2015')
+grafico_temp_sensa(dados_verao_2016, 'Temperatura média e Sensação Térmica média durante o verão e o inverno de 2016')
+grafico_temp_sensa(dados_verao_2017, 'Temperatura média e Sensação Térmica média durante o verão e o inverno de 2017')
+grafico_temp_sensa(dados_verao_2018, 'Temperatura média e Sensação Térmica média durante o verão e o inverno de 2018')
+grafico_temp_sensa(dados_verao_2019, 'Temperatura média e Sensação Térmica média durante o verão e o inverno de 2019')
 #-------------------------Analise forca vento pela temperatura
 
 cepagri_vt <- cepagri
