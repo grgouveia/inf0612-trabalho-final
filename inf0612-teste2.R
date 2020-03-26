@@ -22,7 +22,6 @@
 #--------------------------------------------------------------#
 setwd('/home/grgouveia/studies/mdc/INF-0612-I/trabalho-final')
 
-
 install.packages('tidyverse')
 library(tidyverse)
 library(ggplot2)
@@ -33,16 +32,23 @@ library(dplyr)
 # ou m√™s, sendo estes crit√©rios definidos pela
 # vari√°vel attr. Os Valores poss√≠veis para
 # os atributos s√£o mes e ano.
-filterBy <- function(attr, df, interval) {
-  df$horario <- as.POSIXlt(df$horario)
-  df$ano <- unclass(df$horario)$year + 1900
-  df$mes <- unclass(df$horario)$mon + 1
 
-  if(attr == "ano" ){
-    df<-df[df$ano %in% interval,]
-  } else {
-    df<-df[df$mes %in% interval,]
-  }
+getYears <- function(col) {
+  year <- as.POSIXlt(col)
+  year <- unclass(year)$year + 1900
+}
+
+getMonths <- function(col) {
+  month <- as.POSIXlt(col)
+  month <- unclass(month)$mon + 1
+}
+
+filterBy <- function(attr, df, interval) {
+  df$ano <-getYears(df$horario)
+  df$mes <- getMonths(df$horario)
+
+  df<-df[df$attr %in% interval,]
+  
   print(df)
 }
 
@@ -82,17 +88,6 @@ close(con)
 
 #Observacao dos dados
 summary(cepagri)
-
-#Filtrar pelos dados do enuncionado do trabalho, para isso criar as rowunas ano e mes e aplicar o filtro
-
-cepagri$horario <- as.POSIXct(as.character(cepagri$horario), format = '%d/%m/%Y-%H:%M')
-cepagri$horario <- as.POSIXlt(cepagri$horario)
-cepagri$ano <- unclass(cepagri$horario)$year + 1900
-cepagri$mes <- unclass(cepagri$horario)$mon + 1
-cepagri$dia <- unclass(cepagri$horario)$mday
-
-intervalo <- list(2015, 2016, 2017, 2018, 2019)
-cepagri<-cepagri[cepagri$ano %in% intervalo,]
 
 
 #--------------------------------------------------------------#
@@ -171,7 +166,6 @@ summary(cepagri$vento)
 sort(cepagri[cepagri$vento < 5,3])
 #ocorrem valores proximos de 0, entao 0 parece um valor valido
 #sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
-
 #-----------------------------------------------#
 #        An√°lise registros duplicados          #
 #-----------------------------------------------#
@@ -198,12 +192,15 @@ cepagri[duplicated(cepagri),]
 #     2.1 Agrupando dados por m√™s e ano                        #
 #      Filtro de dados agrupados com base em intervalos        #
 #                                                              #
-#--------------------------------------------------------------#
+#---------------------------------------- ----------------------#
 # Filtrando os dados agrupados por m√™s dentro do
 # intervalo indicado
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 filterByYear <- filterBy("ano", cepagri, intervalo)
 filterByMonth <- filterBy("mes", cepagri, intervalo)
+
+cepagri$ano <- getYears(cepagri$horario)
+cepagri$mes <- getMonths(cepagri$horario)
 
 # Temperatura m√©dia de cada ano
 temp_media_ano <- tapply(cepagri$temp, cepagri$ano, mean)
@@ -222,40 +219,25 @@ summary(cepagri)
 ##########################################################
 ##  O c√≥digo do Boxplot pode ser melhorado e otimizado  ##
 ##########################################################
-
 #boxplot
-cepagri2015 <- cepagri[cepagri$ano == 2015, ]
-cepagri2016 <- cepagri[cepagri$ano == 2016, ]
-cepagri2017 <- cepagri[cepagri$ano == 2017, ]
-cepagri2018 <- cepagri[cepagri$ano == 2018, ]
-cepagri2019 <- cepagri[cepagri$ano == 2019, ]
-
-
-cepagri2015$mes <- as.factor(cepagri2015$mes)
-cepagri2016$mes <- as.factor(cepagri2016$mes)
-cepagri2017$mes <- as.factor(cepagri2017$mes)
-cepagri2018$mes <- as.factor(cepagri2018$mes)
-cepagri2019$mes <- as.factor(cepagri2019$mes)
-
-ggplot(cepagri2015,
-       aes(x = mes , y = temp , group = mes)) +
-    geom_boxplot ()
-
-ggplot(cepagri2016,
-       aes(x = mes , y = temp , group = mes)) +
-    geom_boxplot ()
-
-ggplot(cepagri2017,
-       aes(x = mes , y = temp , group = mes)) +
-    geom_boxplot ()
-
-ggplot(cepagri2018,
-       aes(x = mes , y = temp , group = mes)) +
-    geom_boxplot ()
-
-ggplot(cepagri2019,
-       aes(x = mes , y = temp , group = mes)) +
-    geom_boxplot ()
+cepagriDataByYear <- list()
+i <- 0
+for (ano in unique(cepagri$ano)) {
+  cepagriDataByYear[[i <- i+1]] <- cepagri[cepagri$ano == ano, ]
+  cepagriDataByYear[[i]]$mes <- as.factor(cepagriDataByYear[[i]]$mes)
+  
+  title <- paste("Temperatura no ano de", ano)
+  plot <- ggplot(cepagriDataByYear[[i]],
+            aes(x = mes , y = temp , group = mes)) +
+            geom_boxplot () +
+            theme_light() +
+            labs(colour = element_blank(), 
+                title = title) +
+            theme(plot.title = element_text(hjust = 0.5)) +
+            theme(legend.position = c(0.5, 0.15)) +
+            theme(legend.box.background = element_rect(colour = "black"))
+  print(plot)
+}
 
 #----------------Medidas de Dispers√£o
 
@@ -329,10 +311,10 @@ ggplot(dados_grafico2, aes(x = mes)) +
 
 dados_grafico2
 
-#… possÌvel observar que a sensaÁ„o termica mÈdia durante os meses sempre È mais baixa que a temperatura mÈdia. Nos
-#meses de ver„o , 1,2,3 e 12, em que as temperaturas s„o mais altas e a velocidade de vento mÈdia È mais baixa,
-#a diferenÁa entre a sensaÁ„o termica e a temperatura tende a ser menor.
-#Nos meses de inverno, apresentou uma maior variaÁ„o, principalmente quando a umidade media era um pouco mais baixa
+#? poss?vel observar que a sensa??o termica m?dia durante os meses sempre ? mais baixa que a temperatura m?dia. Nos
+#meses de ver?o , 1,2,3 e 12, em que as temperaturas s?o mais altas e a velocidade de vento m?dia ? mais baixa,
+#a diferen?a entre a sensa??o termica e a temperatura tende a ser menor.
+#Nos meses de inverno, apresentou uma maior varia??o, principalmente quando a umidade media era um pouco mais baixa
 
 
 
