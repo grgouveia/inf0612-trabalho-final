@@ -336,8 +336,16 @@ dados_grafico2
 
 
 
+#-------------------------Analisando estacoes verao e inverno
 
 
+cepagri_analise <- cepagri
+
+
+
+
+cepagri_verao<-cepagri_analise[((cepagri_analise$mes==12&cepagri_analise$dia>=21) | (cepagri_analise$mes==1) | (cepagri_analise$mes==2) |  (cepagri_analise$mes==3 & cepagri_analise$dia<=20)),]
+cepagri_inverno<-cepagri_analise[((cepagri_analise$mes==6&cepagri_analise$dia>=21) | (cepagri_analise$mes==7) | (cepagri_analise$mes==8) |  (cepagri_analise$mes==9 & cepagri_analise$dia<=20)),]
 
 
 
