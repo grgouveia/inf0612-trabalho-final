@@ -20,11 +20,27 @@
 #     Configuracao dos arquivos, libs e funçÃµes auxiliares     #
 #--------------------------------------------------------------#
 setwd('/home/grgouveia/studies/mdc/INF-0612-I/trabalho-final')
+pwd <- getwd()
 
 install.packages('tidyverse')
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
+
+# extrai hora de um Date em POSIXct
+getHour <- function(time) {
+  time <- as.POSIXlt(time);
+  unclass(time)$hour
+}
+
+# retorna periodo do dia de acordo com a hora
+getPeriod <- function(hour){
+  if (hour > 0 & hour < 6) return("madrugada")
+  else if (hour >= 6 & hour < 12) return("manhã")
+  else if (hour >= 12 & hour < 18) return("tarde")
+  else return("noite")
+}
+
 
 # Filtra o dataframe (df) passado como argumento
 # de acordo com um intervalo (interval) em ano
@@ -54,7 +70,7 @@ addDateColumns <- function(df) {
 
 filterBy <- function(attr, df, interval) {
   date <- as.POSIXlt(df$horario)
-  if (attr == "ano") df$ano <- getYears(date) else df$mes <- getMonths(date)
+  ifelse(attr == "ano", df$ano <- getYears(date), df$mes <- getMonths(date))
   df<-df[df$attr %in% interval,]
   print(df)
 }
@@ -246,8 +262,6 @@ for (ano in unique(cepagri$ano)) {
   print(plot)
 }
 
-
-
 #--------------------------------------------------------------#
 #     2. Analisando dados                                      #
 #--------------------------------------------------------------#
@@ -259,27 +273,45 @@ for (ano in unique(cepagri$ano)) {
 # Outono: 21 março até 20 junho                                #
 # Inverno: 21 junho até 20 setembro                            #
 ##-------------------------------------------------------------#
+# classifica cada medição de acordo com o período do dia
+# (madrugada, manhã, tarde, noite)
+periodos <- c("madrugada", "manhã", "tarde", "noite")
+cepagri$hora <- getHour(cepagri$horario)
+cepagri$periodo <- lapply(cepagri$hora, getPeriod)
+
+#######################################
+# TODO
+# ISSO AQUI AINDA NÃO TÁ FUNCIONANDO
+########################################
+# filtra e armazena em listas as medições de acordo com os períodos
+cepagri_periodos <- list()
+for (p in periodos) {
+  aux <- cepagri[cepagri$periodo == p, ]
+  if (any(aux == p)) {print("SIIIIIIIIIIIIIIIIIIIIM")}
+  cepagri_periodos <- list(cepagri_periodos, aux)
+}
+
 #----------------Medidas de Dispersão
 # Desvio padrão
 dp <- c()
 media <- c()
 coef_var <- c()
 for(i in 2:5){
-    #Calculo desvio padrão para rowunas 2:5
+    #Calculo desvio padrão para colunas 2:5
     dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
-    #calculo média rowunas 2:5
+    #calculo média colunas 2:5
     media <-round(c(media, mean(cepagri[,i],na.rm = TRUE)))
 
 }
 #Coeficiente de variação
 coef_var <- round(c(coef_var, (dp/media)*100),2)
-# Tabela que mostra a média, desvio padrão e coeficiente de variação de cada rowuna
+# Tabela que mostra a média, desvio padrão e coeficiente de variação de cada coluna
 variaveis <- c('temp','vento','umid','sensa')
 medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
 
 
 #-------------------------Histogramas
-# Histograma de cada rowuna
+# Histograma de cada coluna
 hist(cepagri$temp, row = 'green', main = 'Histograma Temperatura', xlab = 'Temperatura', ylab = 'FrequÃªncia')
 hist(cepagri$sensa, row = 'red', main = 'Histograma Sensação Térmica', xlab = 'sensação térmica', ylab = 'FrequÃªncia')
 hist(cepagri$vento, row = 'gray', main = 'Histograma Vento', xlab = 'Vento', ylab = 'FrequÃªncia')
@@ -339,7 +371,6 @@ ggplot(dados_grafico_normalizado, aes(x = mes)) +
 
 
 #-------------------------Analisando estacoes verao e inverno
-
 #-------------------------------------------------------------------------------------------------------------------------#
 # Obs: da forma como foi feito, está sendo considerado como verão de 2015, por exemplo, os meses 01,02,03 e 12 de 2015.   #
 # Mas, o mês 12 de 2015 faz parte do verão de 2016                                                                        #
@@ -433,3 +464,6 @@ ggplot(cepagri_vt_inverno, aes(x = vento, fill = escala_temp)) + geom_histogram(
 
 ggplot(cepagri_vt, aes(x = vento, fill = escala_temp)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
 #considerando todo o periodo, ve se que a partir de ventos a 60km/h nao temos registros de temperatura altas, calor ou muito calor.
+
+
+
