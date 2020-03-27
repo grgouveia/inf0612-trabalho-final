@@ -23,6 +23,7 @@ setwd('/home/grgouveia/studies/mdc/INF-0612-I/trabalho-final')
 pwd <- getwd()
 
 install.packages('tidyverse')
+install.packages("DT")
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
@@ -321,47 +322,84 @@ hist(cepagri$umid, row = 'blue', main = 'Histograma Umidade', xlab = 'Umidade', 
 #-------------------------Analisando relacao temperatura umidade e sensacao termica
 cepagri_analise <- cepagri
 
+#--------------------------------------------------------------#
+#     3. Analise de dados                                      #
+#--------------------------------------------------------------#
+#     3.2 Comparativo entre as medidas                         #
+#--------------------------------------------------------------#
+cepagri_analise <- cepagri
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$temp), ]
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$vento), ]
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$sensa), ]
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$umid), ]
+cepagri_analise$diferenca_temp_sensa <- cepagri_analise$temp-cepagri_analise$sensa
 
-cepagri_analise_norm = cepagri_analise
-cepagri_analise_norm$temp<-(cepagri_analise_norm$temp-min(cepagri_analise_norm$temp))/(max(cepagri_analise_norm$temp)-min(cepagri_analise_norm$temp))
-cepagri_analise_norm$umid<-(cepagri_analise_norm$umid-min(cepagri_analise_norm$umid))/(max(cepagri_analise_norm$umid)-min(cepagri_analise_norm$umid))
-cepagri_analise_norm$vento<-(cepagri_analise_norm$vento-min(cepagri_analise_norm$vento))/(max(cepagri_analise_norm$vento)-min(cepagri_analise_norm$vento))
-cepagri_analise_norm$sensa<-(cepagri_analise_norm$sensa-min(cepagri_analise_norm$sensa))/(max(cepagri_analise_norm$sensa)-min(cepagri_analise_norm$sensa))
+dados_medios<-group_by(cepagri_analise, mes)%>%summarise(Temperatura=mean(temp), Umidade=mean(umid), Sensacao=mean(sensa), Vento=mean(vento), Diferenca_temp_sensa=mean(diferenca_temp_sensa))
 
-dados_grafico_normalizado<-group_by(cepagri_analise_norm, mes)%>%summarise(TempMedia=mean(temp), UmidMedia=mean(umid),   SensaMedi=mean(sensa), VentoMedi=mean(vento))
-dados_tabela_nao_normalizado<-group_by(cepagri_analise, mes)%>%summarise(TempMedia=mean(temp), UmidMedia=mean(umid),   SensaMedi=mean(sensa), VentoMedi=mean(vento))
 
-dados_tabela_nao_normalizado$dif_temp_sensa<-dados_tabela_nao_normalizado$TempMedia-dados_tabela_nao_normalizado$SensaMedi
-dados_tabela_nao_normalizado
+dados_medios_normalizados<-dados_medios
 
-ggplot(dados_grafico_normalizado, aes(x = mes)) +
-  geom_point(aes(y = TempMedia, colour = "Temperatura media")) +
-  geom_line(aes(y = TempMedia, colour = "Temperatura media")) +
+dados_medios_normalizados$Temperatura<-(dados_medios$Temperatura-min(dados_medios$Temperatura))/(max(dados_medios$Temperatura)-min(dados_medios$Temperatura))
+dados_medios_normalizados$Umidade<-(dados_medios$Umidade-min(dados_medios$Umidade))/(max(dados_medios$Umidade)-min(dados_medios$Umidade))
+dados_medios_normalizados$Vento<-(dados_medios$Vento-min(dados_medios$Vento))/(max(dados_medios$Vento)-min(dados_medios$Vento))
+dados_medios_normalizados$Sensacao<-(dados_medios$Sensacao-min(dados_medios$Sensacao))/(max(dados_medios$Sensacao)-min(dados_medios$Sensacao))
+dados_medios_normalizados$Diferenca_temp_sensa<-(dados_medios$Diferenca_temp_sensa-min(dados_medios$Diferenca_temp_sensa))/(max(dados_medios$Diferenca_temp_sensa)-min(dados_medios$Diferenca_temp_sensa))
+
+
+DT::datatable(round(dados_medios, digits = 2), fillContainer = TRUE, rownames = FALSE, caption = "Valores médios por mês", autoHideNavigation=TRUE)
+
+
+
+ggplot(dados_medios, aes(x = mes)) +
+  geom_point(aes(y = Temperatura, colour = "Temperatura media")) +
+  geom_line(aes(y = Temperatura, colour = "Temperatura media")) +
   
-  geom_point(aes(y = UmidMedia, colour = "Umidade media")) +
-  geom_line(aes(y = UmidMedia, colour = "Umidade media")) +
+  geom_point(aes(y = Umidade, colour = "Umidade media")) +
+  geom_line(aes(y = Umidade, colour = "Umidade media")) +
   
-  geom_point(aes(y = SensaMedi, colour = "Sensacao media")) +
-  geom_line(aes(y = SensaMedi, colour = "Sensacao media")) +
+  geom_point(aes(y = Sensacao, colour = "Sensacao media")) +
+  geom_line(aes(y = Sensacao, colour = "Sensacao media")) +
   
-  geom_point(aes(y = VentoMedi, colour = "Velocidade Vento media")) +
-  geom_line(aes(y = VentoMedi, colour = "Velocidade Vento media")) +
-  
+  geom_point(aes(y = Vento, colour = "Velocidade Vento media")) +
+  geom_line(aes(y = Vento, colour = "Velocidade Vento media")) +
+
   
   theme_light() +
   labs(colour = element_blank(),
-       title = "Comparativo dos valores medios ao mes de todo periodo") +
+       title = "Visualizacao dos dados da tabela sem normalizar") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = c(0.15, 0.9)) +
+  theme(legend.box.background = element_rect(colour = "black")) +
+  scale_x_continuous(name = "mes", limits = c(1, 12),
+                     breaks =  0:12,
+                     minor_breaks = NULL) +
+  scale_y_continuous(name = "", limits = c(0, 100),
+                     minor_breaks = NULL)
+
+
+ggplot(dados_medios_normalizados, aes(x = mes)) +
+  geom_point(aes(y = Temperatura, colour = "Temperatura media")) +
+  geom_line(aes(y = Temperatura, colour = "Temperatura media")) +
+  
+  geom_point(aes(y = Umidade, colour = "Umidade media")) +
+  geom_line(aes(y = Umidade, colour = "Umidade media")) +
+  
+  geom_point(aes(y = Sensacao, colour = "Sensacao media")) +
+  geom_line(aes(y = Sensacao, colour = "Sensacao media")) +
+  
+  geom_point(aes(y = Vento, colour = "Velocidade Vento media")) +
+  geom_line(aes(y = Vento, colour = "Velocidade Vento media")) +
+  
+  theme_light() +
+  labs(colour = element_blank(),
+       title = "Comparativo dos valores medios normalizados ao mes de todo periodo") +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.position = c(0.1, 0.9)) +
   theme(legend.box.background = element_rect(colour = "black")) +
   scale_x_continuous(name = "mes", limits = c(1, 12),
                      breaks =  0:12,
                      minor_breaks = NULL) +
-  scale_y_continuous(name = "Valor", limits = c(0, 1),
+  scale_y_continuous(name = "", limits = c(0, 1.3),
                      minor_breaks = NULL)
 
 
