@@ -278,22 +278,18 @@ for (ano in unique(cepagri$ano)) {
 # (madrugada, manhã, tarde, noite)
 periodos <- c("madrugada", "manhã", "tarde", "noite")
 cepagri$hora <- getHour(cepagri$horario)
-cepagri$periodo <- lapply(cepagri$hora, getPeriod)
+cepagri$periodo <- as.character(lapply(cepagri$hora, getPeriod))
 
-#######################################
-# TODO
-# ISSO AQUI AINDA NÃO TÁ FUNCIONANDO
-########################################
 # filtra e armazena em listas as medições de acordo com os períodos
-cepagri_periodos <- list()
-for (p in periodos) {
-  aux <- cepagri[cepagri$periodo == p, ]
-  if (any(aux == p)) {print("SIIIIIIIIIIIIIIIIIIIIM")}
-  cepagri_periodos <- list(cepagri_periodos, aux)
+for (i in 0:(length(periodos)-1)) {
+  cepagri_periodos[i <- i+1] <- list(subset(cepagri, cepagri$periodo == periodos[i]))
+}
+summaryByDayPeriod <- list()
+for (i in 0:(length(periodos)-1)) {
+    summaryByDayPeriod[i <- i+1] <- list(group_by(cepagri_periodos[[i]], dia)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
 }
 
-#----------------Medidas de Dispersão
-# Desvio padrão
+#----------------Medidas de Dispersão# Desvio padrão
 dp <- c()
 media <- c()
 coef_var <- c()
@@ -302,7 +298,6 @@ for(i in 2:5){
     dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
     #calculo média colunas 2:5
     media <-round(c(media, mean(cepagri[,i],na.rm = TRUE)))
-
 }
 #Coeficiente de variação
 coef_var <- round(c(coef_var, (dp/media)*100),2)
