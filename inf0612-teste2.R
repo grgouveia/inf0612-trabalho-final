@@ -17,11 +17,8 @@
 #--------------------------------------------------------------#
 
 #--------------------------------------------------------------#
-#     Configuracao dos arquivos, libs e funçÃµes auxiliares     #
+#     Configuracao dos arquivos, libs e funções auxiliares     #
 #--------------------------------------------------------------#
-setwd('/home/grgouveia/studies/mdc/INF-0612-I/trabalho-final')
-pwd <- getwd()
-
 install.packages('tidyverse')
 install.packages("DT")
 library(tidyverse)
@@ -46,7 +43,7 @@ getPeriod <- function(hour){
 # Filtra o dataframe (df) passado como argumento
 # de acordo com um intervalo (interval) em ano
 # ou mÃªs, sendo estes critérios definidos pela
-# variÃ¡vel attr. Os Valores possÃ?veis para
+# variÃ¡vel attr. Os Valores possíveis para
 # os atributos são mes e ano.
 getYears <- function(col) {
   unclass(col)$year + 1900
@@ -81,7 +78,7 @@ is_na <- function(row){
   any(is.na(row))
 }
 
-# analisa se os dados nas k posiçÃµes Ã  frente e atrÃ s da
+# analisa se os dados nas k posições à frente e atrás da
 # posição especificada são repetidos para encontrar
 # valores consecutivos repetidos
 consecutive <- function(vector, k = 1) {
@@ -106,7 +103,6 @@ cepagri <- read.csv(con, header = FALSE,
                     sep = ";",
                     fill = TRUE,
                     col.names = names)
-
 head(cepagri)
 close(con)
 
@@ -116,34 +112,7 @@ summary(cepagri)
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
-#     1.2 Removendo linhas com valor NA                        #
-#--------------------------------------------------------------#
-na_percent <- paste(sum(is.na(cepagri))/nrow(cepagri)*100,"%")
-if (na_percent > 0) {
-  is_na <- apply(cepagri, 1, is_na)
-  cepagri <- cepagri[!is_na,];cepagri
-  confirm_removal <- !any(is.na(cepagri)); paste("Rows with NA data", ifelse(confirm_removal, "removed.", "removal failed."))
-}
-
-#--------------------------------------------------------------#
-#     1. Processando dados                                     #
-#--------------------------------------------------------------#
-#     1.3 Corrigindo coerçÃµes implÃ?citas indesejadas           #
-#--------------------------------------------------------------#
-for (i in 2:length(cepagri)) {
-  aux <- cepagri[,i]
-  if(is.factor(aux)) {
-    aux <- as.character(aux)
-    aux <- as.numeric(aux)
-  }
-  print(class(aux))
-  cepagri[,i] <- aux
-}
-
-#--------------------------------------------------------------#
-#     1. Processando dados                                     #
-#--------------------------------------------------------------#
-#     1.4 Removendo outliers                                   #
+#     1.2 Removendo outliers                                   #
 #--------------------------------------------------------------#
 ## Analisando discrepancia de cada informacao e
 ## removendo outliers
@@ -167,17 +136,43 @@ cepagri[cepagri$umid == 0, 4] <- NA
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
+#     1.3 Corrigindo coerções implícitas indesejadas           #
+#--------------------------------------------------------------#
+for (i in 2:length(cepagri)) {
+  aux <- cepagri[,i]
+  if(is.factor(aux)) {
+    aux <- as.character(aux)
+    aux <- as.numeric(aux)
+  }
+  print(class(aux))
+  cepagri[,i] <- aux
+}
+
+#--------------------------------------------------------------#
+#     1. Processando dados                                     #
+#--------------------------------------------------------------#
 #     1.5 Convertendo coluna de data p/ POSIXct
 #--------------------------------------------------------------#
 cepagri$horario <- as.POSIXct(
                 as.character(cepagri$horario),
                 format='%d/%m/%Y-%H:%M')
 
+#--------------------------------------------------------------#
+#     1. Processando dados                                     #
+#--------------------------------------------------------------#
+#     1.6 Removendo linhas com valor NA                        #
+#--------------------------------------------------------------#
+na_percent <- paste(sum(is.na(cepagri))/nrow(cepagri)*100,"%")
+if (na_percent > 0) {
+  is_na <- apply(cepagri, 1, is_na)
+  cepagri <- cepagri[!is_na,];cepagri
+  confirm_removal <- !any(is.na(cepagri)); paste("Rows with NA data", ifelse(confirm_removal, "removed.", "removal failed."))
+}
 
 #--------------------------------------------------------------#
 #     1. Processando dados                                     #
 #--------------------------------------------------------------#
-#     1.6 Análise de registros duplicados                      #
+#     1.7 Análise de registros duplicados                      #
 #         Valores repetidos durante dias consectivos           #
 #--------------------------------------------------------------#
 # filtra os valores recorrentes em 144 dias consecutivos
@@ -189,10 +184,6 @@ summary(cepagri$vento)
 sort(cepagri[cepagri$vento < 5,3])
 #ocorrem valores proximos de 0, entao 0 parece um valor valido
 #sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
-#-----------------------------------------------#
-#        Análise registros duplicados           #
-#-----------------------------------------------#
-
 #install.packages('tidyverse')
 library(tidyverse)
 
@@ -209,6 +200,7 @@ cepagri <- cepagri[!duplicated(cepagri),]
 
 #verifica se ainda tem linhas duplicadas
 cepagri[duplicated(cepagri),]
+
 #--------------------------------------------------------------#
 #     2. Analisando dados                                      #
 #--------------------------------------------------------------#
@@ -281,12 +273,12 @@ cepagri$hora <- getHour(cepagri$horario)
 cepagri$periodo <- as.character(lapply(cepagri$hora, getPeriod))
 
 # filtra e armazena em listas as medições de acordo com os períodos
-for (i in 0:(length(periodos)-1)) {
-  cepagri_periodos[i <- i+1] <- list(subset(cepagri, cepagri$periodo == periodos[i]))
+for (i in 1:length(periodos)) {
+  cepagri_periodos[i] <- list(subset(cepagri, cepagri$periodo == periodos[i]))
 }
 summaryByDayPeriod <- list()
-for (i in 0:(length(periodos)-1)) {
-    summaryByDayPeriod[i <- i+1] <- list(group_by(cepagri_periodos[[i]], dia)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
+for (i in 1:length(cepagri_periodos)) {
+    summaryByDayPeriod[i] <- list(group_by(cepagri_periodos[[i]], dia)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
 }
 
 #----------------Medidas de Dispersão# Desvio padrão
