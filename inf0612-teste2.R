@@ -273,6 +273,7 @@ cepagri$hora <- getHour(cepagri$horario)
 cepagri$periodo <- as.character(lapply(cepagri$hora, getPeriod))
 
 # filtra e armazena em listas as medições de acordo com os períodos
+cepagri_periodos <- list()
 for (i in 1:length(periodos)) {
   cepagri_periodos[i] <- list(subset(cepagri, cepagri$periodo == periodos[i]))
 }
