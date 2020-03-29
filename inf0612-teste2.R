@@ -154,19 +154,6 @@ cepagri$horario <- as.POSIXct(
                 as.character(cepagri$horario),
                 format='%d/%m/%Y-%H:%M')
 
-#--------------------------------------------------------------#
-#     1. Processando os dados                                  #
-#--------------------------------------------------------------#
-#     1.4 Removendo linhas com valor NA                        #
-#--------------------------------------------------------------#
-na_percent <- paste(sum(is.na(cepagri))/nrow(cepagri)*100,"%")
-if (na_percent > 0) {
-   is_na <- apply(cepagri, 1, is_na)
-   cepagri <- cepagri[!is_na,];cepagri
-   confirm_removal <- !any(is.na(cepagri)); paste("Rows with NA data", ifelse(confirm_removal, "removed.", "removal failed."))
-}
-
-
 library(tidyverse)
 
 #Retorna as linhas duplicadas do data frame
@@ -320,16 +307,27 @@ temp_media
 #--------------------------------------------------------------#
 #     3.2 Análise de dados por períodos                        #
 #     classifica cada medição de acordo com o período do dia   #
-#     (madrugada, manhã, tarde, noite)                         #
+#     (madrugada, manhã, tarde, noite) e exibe a velocidade    #
+#     média do vento de acordo com cada período ao longo dos   #
+#     anos                                                     #
 #--------------------------------------------------------------#
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 periodos <- c("1 - manhã", "2 - tarde", "3 - noite", "4 - madrugada")
+cepagri_aux <- cepagri
+
+# Removendo linhas com valor NA                        
+na_percent <- paste(sum(is.na(cepagri_aux_aux))/nrow(cepagri_aux)*100,"%")
+if (na_percent > 0) {
+   is_na <- apply(cepagri_aux, 1, is_na)
+   cepagri_aux <- cepagri_aux[!is_na,];cepagri_aux
+   confirm_removal <- !any(is.na(cepagri_aux)); paste("Rows with NA data", ifelse(confirm_removal, "removed.", "removal failed."))
+}
 
 # cria coluna de hora para identificar o período
-cepagri$hora <- getHour(cepagri$horario)
+cepagri_aux$hora <- getHour(cepagri_aux$horario)
 # agrupa medições em períodos
-cepagri$periodo <- as.character(lapply(cepagri$hora, getPeriod))
-ventoPorPeriodoEAno <- as.data.frame(group_by(cepagri, periodo, ano)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
+cepagri_aux$periodo <- as.character(lapply(cepagri_aux$hora, getPeriod))
+ventoPorPeriodoEAno <- as.data.frame(group_by(cepagri_aux, periodo, ano)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
 # remove anos que contém dados desbalanceados (2014 e 2020)
 ventoPorPeriodoEAno <- ventoPorPeriodoEAno[ventoPorPeriodoEAno$ano %in% intervalo, ]
 # exibe dados em gráficos de barra agrupados por período
@@ -339,9 +337,9 @@ gbarplot(ventoPorPeriodoEAno)
 # cria tabela para o modek
 # filtra e armazena em listas as medições de acordo com os períodos
 cepagri_periodos <- list()
-cepagri_filtered <-  cepagri[cepagri$ano %in% intervalo, ]
+cepagri_aux_filtered <-  cepagri_aux[cepagri_aux$ano %in% intervalo, ]
 for (i in 1:length(periodos)) {
-  cepagri_periodos[i] <- list(subset(cepagri_filtered, periodo == periodos[i]))
+  cepagri_periodos[i] <- list(subset(cepagri_aux_filtered, periodo == periodos[i]))
 }
 summaryByDayPeriod <- list()
 for (i in 1:length(cepagri_periodos)) {
@@ -424,8 +422,6 @@ grafico_temp_sensa_umid(dados_inverno_2016, 'Inverno 2016')
 grafico_temp_sensa_umid(dados_inverno_2017, 'Inverno 2017')
 grafico_temp_sensa_umid(dados_inverno_2018, 'Inverno 2018')
 grafico_temp_sensa_umid(dados_inverno_2019, 'Inverno 2019')
-
-
 
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
