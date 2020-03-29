@@ -219,7 +219,7 @@ summary(cepagri)
 #     2. Analise exploratória dos dados                        #
 #--------------------------------------------------------------#
 ##                                                             #
-#     2.1 Medidas de posição com a base tratada                #
+#     2.2 Medidas de dispersão com a base tratada                #
 #--------------------------------------------------------------#
 
 #---------------------- Boxplot
@@ -239,8 +239,6 @@ boxplot <- function(variavel,titulo)
   return(plot)
 }  
 
-
-
 boxplot(cepagri$temp, "boxplot Temperatura")
 boxplot(cepagri$sensa, "boxplot Sensação Térmica")
 boxplot(cepagri$vento, "boxplot Vento")
@@ -256,7 +254,9 @@ for(i in 2:5){
     #calculo média colunas 2:5
     media <-round(c(media, mean(cepagri[,i],na.rm = TRUE)))
 }
-#Coeficiente de variação
+
+#----------------------Coeficiente de variação
+
 coef_var <- round(c(coef_var, (dp/media)*100),2)
 # Tabela que mostra a média, desvio padrão e coeficiente de variação de cada coluna
 variaveis <- c('temp','vento','umid','sensa')
@@ -265,10 +265,10 @@ medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
 
 #-------------------------Histogramas
 # Histograma de cada coluna
-hist(cepagri$temp, row = 'green', main = 'Histograma Temperatura', xlab = 'Temperatura', ylab = 'FrequÃªncia')
-hist(cepagri$sensa, row = 'red', main = 'Histograma Sensação Térmica', xlab = 'sensação térmica', ylab = 'FrequÃªncia')
-hist(cepagri$vento, row = 'gray', main = 'Histograma Vento', xlab = 'Vento', ylab = 'FrequÃªncia')
-hist(cepagri$umid, row = 'blue', main = 'Histograma Umidade', xlab = 'Umidade', ylab = 'FrequÃªncia')
+hist(cepagri$temp, row = 'gray', main = 'Histograma Temperatura', xlab = 'Temperatura', ylab = 'Frequência')
+hist(cepagri$sensa, row = 'gray', main = 'Histograma Sensação Térmica', xlab = 'Sensação Térmica', ylab = 'Frequência')
+hist(cepagri$vento, row = 'gray', main = 'Histograma Vento', xlab = 'Vento', ylab = 'Frequência')
+hist(cepagri$umid, row = 'gray', main = 'Histograma Umidade', xlab = 'Umidade', ylab = 'Frequência')
 
 
 #--------------------------------------------------------------#
@@ -295,7 +295,6 @@ temp_media
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#                                                              #
 #     3.2 Análise de dados por períodos                        #
 #                                                              #
 # Primavera: 21 setembro até 20 dezembro                       #         
@@ -324,7 +323,7 @@ for (i in 1:length(cepagri_periodos)) {
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     3.4 Analise das estacoes verao e inverno                 #
+#     3.3 Analise das estacoes verao e inverno                 #
 #--------------------------------------------------------------#
 
 cepagri_analise <- cepagri
