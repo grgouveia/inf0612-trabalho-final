@@ -320,8 +320,6 @@ for (i in 1:length(cepagri_periodos)) {
     summaryByDayPeriod[i] <- list(group_by(cepagri_periodos[[i]], dia)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
 }
 
-
-
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
@@ -341,18 +339,27 @@ cepagri_inverno<-cepagri_analise[((cepagri_analise$mes==6&cepagri_analise$dia>=2
 # Gera outro dataframe, transforma as colunas ano, mês e dia para o formato Date e agrupa em uma coluna
 cepagri_verao2 <- cepagri_verao
 cepagri_verao2$data <- as.Date(paste(cepagri_verao2$ano, cepagri_verao2$mes, cepagri_verao2$dia, sep = "-"))
+cepagri_inverno2 <- cepagri_inverno
+cepagri_inverno2$data <- as.Date(paste(cepagri_inverno2$ano, cepagri_inverno2$mes, cepagri_inverno2$dia, sep = "-"))
 
 #Seta para todos os anos o intervalo de tempo do verão
-dados_verao_2015 <- cepagri_verao2[(cepagri_verao2$data >= '2014-12-21' & cepagri_verao2$data <= '2015-3-21'),]
-dados_verao_2016 <- cepagri_verao2[(cepagri_verao2$data >= '2015-12-21' & cepagri_verao2$data <= '2016-3-21'),]
-dados_verao_2017 <- cepagri_verao2[(cepagri_verao2$data >= '2016-12-21' & cepagri_verao2$data <= '2017-3-21'),]
-dados_verao_2018 <- cepagri_verao2[(cepagri_verao2$data >= '2017-12-21' & cepagri_verao2$data <= '2018-3-21'),]
-dados_verao_2019 <- cepagri_verao2[(cepagri_verao2$data >= '2018-12-21' & cepagri_verao2$data <= '2019-3-21'),]
+dados_verao_2015 <- cepagri_verao2[(cepagri_verao2$data >= '2014-12-21' & cepagri_verao2$data <= '2015-3-20'),]
+dados_verao_2016 <- cepagri_verao2[(cepagri_verao2$data >= '2015-12-21' & cepagri_verao2$data <= '2016-3-20'),]
+dados_verao_2017 <- cepagri_verao2[(cepagri_verao2$data >= '2016-12-21' & cepagri_verao2$data <= '2017-3-20'),]
+dados_verao_2018 <- cepagri_verao2[(cepagri_verao2$data >= '2017-12-21' & cepagri_verao2$data <= '2018-3-20'),]
+dados_verao_2019 <- cepagri_verao2[(cepagri_verao2$data >= '2018-12-21' & cepagri_verao2$data <= '2019-3-20'),]
+
+#Seta para todos os anos o intervalo de tempo do inverno
+dados_inverno_2015 <- cepagri_inverno2[(cepagri_inverno2$data >= '2015-06-21' & cepagri_inverno2$data <= '2015-09-20'),]
+dados_inverno_2016 <- cepagri_inverno2[(cepagri_inverno2$data >= '2016-06-21' & cepagri_inverno2$data <= '2016-09-20'),]
+dados_inverno_2017 <- cepagri_inverno2[(cepagri_inverno2$data >= '2017-06-21' & cepagri_inverno2$data <= '2017-09-20'),]
+dados_inverno_2018 <- cepagri_inverno2[(cepagri_inverno2$data >= '2018-06-21' & cepagri_inverno2$data <= '2018-09-20'),]
+dados_inverno_2019 <- cepagri_inverno2[(cepagri_inverno2$data >= '2019-06-21' & cepagri_inverno2$data <= '2019-09-20'),]
 
 #dados_medios_normalizados$Temperatura<-(dados_medios$Temperatura-min(dados_medios$Temperatura))/(max(dados_medios$Temperatura)-min(dados_medios$Temperatura))
 
-################################## Inicio Normalização ##############################
-# Biblioteca para normalizar os dados
+################################## Normalização ##############################
+# Biblioteca necessária para normalizar os dados
 # install.packages('BBmisc')
 # library(BBmisc)
 
@@ -378,11 +385,17 @@ grafico_temp_sensa_umid <- function(df, estacao)
     #ggtitle(paste('Médias da Temperatura x Sensação Térmica x Umidade',titulo))
 }
 
-grafico_temp_sensa_umid(dados_verao_2015, 'Verão 2015', 'Verão')
-grafico_temp_sensa_umid(dados_verao_2016, 'Verão 2016', 'Verão')
-grafico_temp_sensa_umid(dados_verao_2017, 'Verão 2017', 'Verão')
-grafico_temp_sensa_umid(dados_verao_2018, 'Verão 2018', 'Verão')
-grafico_temp_sensa_umid(dados_verao_2019, 'Verão 2019', 'Verão')
+grafico_temp_sensa_umid(dados_verao_2015, 'Verão 2015')
+grafico_temp_sensa_umid(dados_verao_2016, 'Verão 2016')
+grafico_temp_sensa_umid(dados_verao_2017, 'Verão 2017')
+grafico_temp_sensa_umid(dados_verao_2018,'Verão 2018')
+grafico_temp_sensa_umid(dados_verao_2019, 'Verão 2019')
+
+grafico_temp_sensa_umid(dados_inverno_2015, 'Inverno 2015')
+grafico_temp_sensa_umid(dados_inverno_2016, 'Inverno 2016')
+grafico_temp_sensa_umid(dados_inverno_2017, 'Inverno 2017')
+grafico_temp_sensa_umid(dados_inverno_2018, 'Inverno 2018')
+grafico_temp_sensa_umid(dados_inverno_2019, 'Inverno 2019')
 
 
 
