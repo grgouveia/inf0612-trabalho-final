@@ -21,15 +21,30 @@
 #--------------------------------------------------------------#
 install.packages('tidyverse')
 install.packages("DT")
+install.packages("systemfonts")
+install.packages("gdtools")
 install.packages("hrbrthemes")
 install.packages("viridis")
-install.packages("hrbrthemes"); 
-install.packages("systemfonts")
+library(viridis)
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
-library(viridis)
 library(hrbrthemes)
+
+gbarplot <- function(df, wrap, wrapper) {
+  ggplot(df, 
+      aes(fill=periodo, x=ano, y=Vento)) +
+      geom_bar(position=position_dodge(width=0.6), stat="identity", width=0.5) +
+      #scale_fill_viridis(discrete = T) + 
+      ggtitle("Velocidade do vento por período do dia") +
+      theme_ipsum() +
+      xlab("Ano") +
+      ylab("Velocidade do Vento (km/h)") 
+      #if (wrap) facet_wrap(~periodo)  
+}
+
+gbarplot(ventoPorPeriodoEAno, wrap = FALSE)
+gbarplot(ventoPorPeriodoEAno, wrap = TRUE)
 
 # extrai hora de um Date em POSIXct
 getHour <- function(time) {
@@ -39,10 +54,10 @@ getHour <- function(time) {
 
 # retorna periodo do dia de acordo com a hora
 getPeriod <- function(hour){
-  if (hour > 0 & hour < 6) return("madrugada")
-  else if (hour >= 6 & hour < 12) return("manhã")
-  else if (hour >= 12 & hour < 18) return("tarde")
-  else return("noite")
+  if (hour > 0 & hour < 6) return("1 - madrugada")
+  else if (hour >= 6 & hour < 12) return("2 - manhã")
+  else if (hour >= 12 & hour < 18) return("3 - tarde")
+  else return("4 - noite")
 }
 
 
@@ -288,35 +303,40 @@ temp_media
 #--------------------------------------------------------------#
 #                                                              #
 #     3.2 Análise de dados por períodos                        #
-##-------------------------------------------------------------#
-# classifica cada medição de acordo com o período do dia
-# (madrugada, manhã, tarde, noite)
-periodos <- c("madrugada", "manhã", "tarde", "noite")
-cepagri$hora <- getHour(cepagri$horario)
-cepagri$periodo <- as.character(lapply(cepagri$hora, getPeriod))
-ventoPorPeriodoEAno <-list(group_by(cepagri, periodo, ano)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento))); ventoPorPeriodoEAno
+#     classifica cada medição de acordo com o período do dia   #
+#     (madrugada, manhã, tarde, noite)                         #
+#--------------------------------------------------------------#
+intervalo <- list(2015, 2016, 2017, 2018, 2019)
+periodos <- c("1 - manhã", "2 - tarde", "3 - noite", "4 - madrugada")
 
+# cria coluna de hora para identificar o período
+cepagri$hora <- getHour(cepagri$horario)
+# agrupa medições em períodos
+cepagri$periodo <- as.character(lapply(cepagri$hora, getPeriod))
+ventoPorPeriodoEAno <- as.data.frame(group_by(cepagri, periodo, ano)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
+# remove anos que contém dados desbalanceados (2014 e 2020)
+ventoPorPeriodoEAno[ventoPorPeriodoEAno$ano %in% intervalo, ]
+# exibe dados em gráficos de barra agrupados por período
+gbarplot(ventoPorPeriodoEAno, wrap = FALSE)
+gbarplot(ventoPorPeriodoEAno, wrap = TRUE)
+
+
+###############################################################
+#-------------------------------------------------------------#
+#     3. Finalizar criação de tabeas!!!!                      #
+#     TODO                                                    #
+#-------------------------------------------------------------#
+################################################################
+# cria tabela para o modek
 # filtra e armazena em listas as medições de acordo com os períodos
 cepagri_periodos <- list()
 for (i in 1:length(periodos)) {
-  cepagri_periodos[i] <- list(subset(cepagri, cepagri$periodo == periodos[i]))
+  cepagri_periodos[i] <- list(subset(cepagri, periodo == periodos[i]))
 }
 summaryByDayPeriod <- list()
 for (i in 1:length(cepagri_periodos)) {
-    summaryByDayPeriod[i] <- list(group_by(cepagri_periodos[[i]], ano)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
+    summaryByDayPeriod[i] <- list(group_by(cepagri_periodos[[i]], ano)%>%summarise(Vento=mean(vento)))
 }
-
-gbarplot(ventoPorPeriodoEAno[[1]], wrap = FALSE)
-gbarplot(ventoPorPeriodoEAno[[1]], wrap = TRUE)
-
-gbarplot <- function(df, wrap, wrapper) {
-  ggplot(df,
-         aes(fill=periodo, x=ano, y=Vento)) +
-    geom_bar(position="dodge", stat="identity") +
-    ggtitle("Vento por período do dia") +
-    if (wrap) facet_wrap(~periodo)  
-}
-
 
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
