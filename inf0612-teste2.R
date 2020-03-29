@@ -314,10 +314,10 @@ hist(cepagri$umid, row = 'gray', main = 'Histograma Umidade', xlab = 'Umidade', 
 
 
 #--------------------------------------------------------------#
-#     3. Analisando dados                                      #
+#     2. Analise exploratória dos dados                        #
 #--------------------------------------------------------------#
-#     3.1 Agrupando dados por mês e ano                        #
-#      Filtro de dados agrupados com base em intervalos        #
+#     2.4 Agrupando dados por mês e ano                        #
+#         Filtro de dados agrupados com base em intervalos     #
 #--------------------------------------------------------------#
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 filterByYear <- filterBy("ano", cepagri, intervalo)
@@ -337,7 +337,8 @@ temp_media
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     3.2 Análise de dados por períodos                        #
+#     3.1 Comparação entre medidas coletadas                   #
+#         Análise de dados por períodos                        #
 #--------------------------------------------------------------#
 
 #classifica cada medição de acordo com o período do dia   #
@@ -375,7 +376,9 @@ for (i in 1:length(cepagri_periodos)) {
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     3.3 Analise das estacoes verao e inverno                 #
+#     3.2 Analise das estacoes verao e inverno                 #
+#         Comparação das médias da temp, sensa e umidade nas   #
+#         estações inv e verão                                 #
 #--------------------------------------------------------------#
 
 cepagri_analise <- cepagri
@@ -423,7 +426,8 @@ grafico_temp_sensa_umid(dados_inverno_2019, 'Inverno 2019')
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     3.4 Comparativo entre as medidas                         #
+#     3.3 Comparação entre as medidas da velocidade e do vento #
+#         por dia ao longo dos anos                            #
 #--------------------------------------------------------------#
 cepagri_analise <- cepagri
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$temp), ]
@@ -505,7 +509,8 @@ ggplot(dados_medios_normalizados, aes(x = mes)) +
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     3.5 Analise vento e temperatura no verao e inverno       #
+#     3.5 Comparação vento x Temperatura durante as estações   #
+#         do verão e do inverno                                #
 #--------------------------------------------------------------#
 
 cepagri_vt <- cepagri
