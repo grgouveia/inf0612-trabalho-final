@@ -351,11 +351,15 @@ dados_verao_2019 <- cepagri_verao2[(cepagri_verao2$data >= '2018-12-21' & cepagr
 
 #dados_medios_normalizados$Temperatura<-(dados_medios$Temperatura-min(dados_medios$Temperatura))/(max(dados_medios$Temperatura)-min(dados_medios$Temperatura))
 
-
+################################## Inicio Normalização ##############################
 # Biblioteca necessária para normalizar os dados
+# install.packages('BBmisc')
 # library(BBmisc)
 
-grafico_temp_sensa_umid <- function(df, titulo, estacao)
+
+####################### Fim Normalização ###################
+
+grafico_temp_sensa_umid <- function(df, estacao)
 {
     df$temp <- normalize(df[, 'temp'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
     df$umid <- normalize(df[, 'umid'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
@@ -369,12 +373,12 @@ grafico_temp_sensa_umid <- function(df, titulo, estacao)
     scale_colour_manual('', 
                         breaks = c('Temperatura Média', 'Sensação Termica Média', 'Umidade Média'), 
                         values = c('red', 'blue', 'black')) +
-    theme(legend.position = 'botton') +
+    theme(legend.position = 'top') +
     theme(axis.text.x=element_text(angle = 60, hjust=1, size = 15, face = 'bold')) +
     theme(axis.text.y=element_text(hjust=1, size = 13, face = 'bold')) +
     ylab("Escala normalizada entre 0 e 1") +
-    xlab( estacao) +
-    ggtitle(paste('Médias da Temperatura x Sensação Térmica x Umidade',titulo))
+    xlab( estacao)
+    #ggtitle(paste('Médias da Temperatura x Sensação Térmica x Umidade',titulo))
 }
 
 grafico_temp_sensa_umid(dados_verao_2015, 'Verão 2015', 'Verão')
