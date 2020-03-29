@@ -452,11 +452,20 @@ ggplot(dados_medios_normalizados, aes(x = mes)) +
 #--------------------------------------------------------------#
 #     3. Analisando dados                                       #
 #--------------------------------------------------------------#
-#     3.5 Analise vento temperatura verao inverno              #
+#     3.X Analise vento temperatura verao inverno              #
 #--------------------------------------------------------------#
 
 cepagri_vt <- cepagri
-cepagri_vt$dia<-getDay(cepagri_vt$horario)
+
+
+intervalo <- list(2015, 2016, 2017, 2018, 2019)
+cepagri_vt<-cepagri_vt[cepagri_vt$ano %in% intervalo,]
+
+cepagri_vt$horario<-NULL
+cepagri_vt$umid<-NULL
+cepagri_vt$sensa<-NULL
+cepagri_vt$hora<-NULL
+cepagri_vt$periodo<-NULL
 
 #removendo na que podem ter sido colocado no tratamento de dados pois como a analise nao e temporal, interessa apenas os valores
 cepagri_vt <- cepagri_vt[!is.na(cepagri_vt$temp), ]
@@ -473,49 +482,6 @@ cepagri_vt_inverno<-cepagri_vt[((cepagri_vt$mes==6&cepagri_vt$dia>=21) | (cepagr
 #verao
 summary(cepagri_vt_verao$vento)
 summary(cepagri_vt_verao$inverno)
-
-ggplot(cepagri_vt_verao, aes(x = temp, fill = escala_vento)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)+
-theme_light() +
-  labs(colour = element_blank(),
-       title = "Temperatura e escala de vento no verao") +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(legend.position = c(0.9, 0.9)) +
-  theme(legend.box.background = element_rect(colour = "black")) +
-  scale_x_continuous(name = "Temperatura", limits = c(14, 36)) +
-  scale_y_continuous(name = "Frequencia")
-
-#analisando o grafico eh possivel ver que quando mais ocorrem ventos, as temperaturas ficam em torno de 20 a 25 graus e nas temperaturas
-#altas, ocorrem uma quantidade menor de ventos de forma geral, prevalecendo ventos em velocidade media e pouquissimos ventos fortes no verao
-
-
-ggplot(cepagri_vt_inverno, aes(x = temp, fill = escala_vento)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)+
-  theme_light() +
-  labs(colour = element_blank(),
-       title = "Temperatura e escala de vento no inverno") +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(legend.position = c(0.9, 0.9)) +
-  theme(legend.box.background = element_rect(colour = "black")) +
-  scale_x_continuous(name = "Temperatura", limits = c(4, 36)) +
-  scale_y_continuous(name = "Frequencia")
-
-
-#no inverno, tambem ocorre com mais frequencia vento a temperatura entre 15 a 25 graus, sendo que entre 15 a 25 tem uma grande proporcao de ventos fortes
-#nessa epoca do ano
-
-ggplot(cepagri_vt, aes(x = temp, fill = escala_vento)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
-# considerando todos os meses dos anos analisados, a frequencia de ventos ocorre entre as temperaturas de 15 a 25 graus,
-#sendo um pouco menor a ocorria de ventos fortes a temperatura acima de 25 graus diminuindo conforme a temperatura eleva.
-
-#analisando de forma inversa, consideranto agora a escala da temperatura
-
-ggplot(cepagri_vt_verao, aes(x = vento, fill = escala_temp)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
-#analisando o grafico eh possivel ver que quando mais ocorrem ventos, as temperaturas ficam em torno de 15 a 25 graus e conforme
-# a velocidade do vendo maior, as temperaturas tendem a ficar no intervalo de 20 a 27 graus. Provalvemente ventos fortes
-# amenizam a temperatura, pois como o dado analisado verao e esperado um valor alto de temperaturas calor e muito calor
-
-ggplot(cepagri_vt_inverno, aes(x = vento, fill = escala_temp)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)
-#no inverno, onde e esperado normalmente temperaturas mais baixas, e possivel ver que se a velocidade do vento esta alta,
-#aparecem pouquissimos casos de temperatura calor
 
 ggplot(cepagri_vt_verao, aes(x = vento, fill = escala_temp)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)+
   theme_light() +
@@ -539,23 +505,29 @@ ggplot(cepagri_vt_inverno, aes(x = vento, fill = escala_temp)) + geom_histogram(
   scale_x_continuous(name = "Vento", limits = c(1, 77)) +
   scale_y_continuous(name = "Frequencia")
 
+cepagri_vt$estacao <-  ifelse(cepagri_vt$mes == 1 | cepagri_vt$mes ==2, "Verao",
+                              ifelse(cepagri_vt$mes == 12 , ifelse (cepagri_vt$dia>=21, "Verao", "Primavera"),
+                                     ifelse(cepagri_vt$mes == 3 , ifelse (cepagri_vt$dia<21, "Verao", "Outono"),
+                                            ifelse(cepagri_vt$mes == 4 | cepagri_vt$mes ==5, "Outono",
+                                                   ifelse(cepagri_vt$mes == 6 , ifelse (cepagri_vt$dia>=21, "Inverno", "Outono"),
+                                                          ifelse(cepagri_vt$mes == 7 | cepagri_vt$mes ==8, "Inverno",
+                                                                 ifelse(cepagri_vt$mes == 9 , ifelse (cepagri_vt$dia>=21, "Primavera", "Inverno"), "Primavera")#mes 9
+                                                          )#mes 7 e 8
+                                                   )#mes 6
+                                            )#mes 4 e 4
+                                     )#mes 3       
+                              )#mes 12
+)#mes 1 e 2
 
 
-ggplot(cepagri_vt, aes(x = vento, fill = escala_temp)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)+
-  theme_light() +
-  labs(colour = element_blank(),
-       title = "Vento e temperatura geral") +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(legend.position = c(0.9, 0.9)) +
-  theme(legend.box.background = element_rect(colour = "black")) +
-  scale_x_continuous(name = "Vento", limits = c(1, 77)) +
-  scale_y_continuous(name = "Frequencia")
-
-  cepagri_vt_inverno$estacao<-"Inverno"
-  cepagri_vt_verao$estacao<-"Verao"
 
   
-  cepagri_vt_tabela  <- count(bind_rows(cepagri_vt_inverno[11:13],cepagri_vt_verao[11:13]), estacao, escala_temp, escala_vento)
-
-
+  cepagri_vt_tabela <-   
+    group_by(cepagri_vt,  estacao, escala_temp, escala_vento)%>%count()
+  
+  names_grafico <- c("Estacao", "Temperatura", "Vento", "Frequencia")
+  
+  names(cepagri_vt_tabela) <- names_grafico
+  
+  cepagri_vt_tabela[cepagri_vt_tabela$Estacao=="Inverno"|cepagri_vt_tabela$Estacao=="Verao",]
   
