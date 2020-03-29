@@ -154,22 +154,17 @@ cepagri$horario <- as.POSIXct(
                 as.character(cepagri$horario),
                 format='%d/%m/%Y-%H:%M')
 
-library(tidyverse)
-
-#Retorna as linhas duplicadas do data frame
-cepagri[duplicated(cepagri),]
-
-# Exemplo de filtragem de uma linha duplidada
-cepagri[cepagri$horario == '2015-01-23 09:24:00',]
-
-# Retorna as linhas duplicadas do data frame
-cepagri[duplicated(cepagri),]
-# Remove linhas duplicadas
-cepagri <- cepagri[!duplicated(cepagri),]
-
-#verifica se ainda tem linhas duplicadas
-cepagri[duplicated(cepagri),]
-
+#--------------------------------------------------------------#
+#     1. Processando os dados                                  #
+#--------------------------------------------------------------#
+#     1.4 Removendo linhas com valor NA                        #
+#--------------------------------------------------------------#
+na_percent <- paste(sum(is.na(cepagri))/nrow(cepagri)*100,"%")
+if (na_percent > 0) {
+  is_na <- apply(cepagri, 1, is_na)
+  cepagri <- cepagri[!is_na,];cepagri
+  confirm_removal <- !any(is.na(cepagri)); paste("Rows with NA data", ifelse(confirm_removal, "removed.", "removal failed."))
+}
 
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
@@ -262,7 +257,7 @@ for(i in 2:5){
     #Calculo desvio padrão para colunas 2:5
     dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
     #calculo média colunas 2:5
-    media <-round(c(media, mean(cepagri[,i],na.rm = TRUE)))
+    media <-round(c(media, mean( na.rm = TRUE, cepagri[,i])))
 }
 
 #----------------------Coeficiente de variação
@@ -315,19 +310,11 @@ intervalo <- list(2015, 2016, 2017, 2018, 2019)
 periodos <- c("1 - manhã", "2 - tarde", "3 - noite", "4 - madrugada")
 cepagri_aux <- cepagri
 
-# Removendo linhas com valor NA                        
-na_percent <- paste(sum(is.na(cepagri_aux))/nrow(cepagri_aux)*100,"%")
-if (na_percent > 0) {
-   is_na <- apply(cepagri_aux, 1, is_na)
-   cepagri_aux <- cepagri_aux[!is_na,];cepagri_aux
-   confirm_removal <- !any(is.na(cepagri_aux)); paste("Rows with NA data", ifelse(confirm_removal, "removed.", "removal failed."))
-}
-
 # cria coluna de hora para identificar o período
 cepagri_aux$hora <- getHour(cepagri_aux$horario)
 # agrupa medições em períodos
 cepagri_aux$periodo <- as.character(lapply(cepagri_aux$hora, getPeriod))
-ventoPorPeriodoEAno <- as.data.frame(group_by(cepagri_aux, periodo, ano)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
+ventoPorPeriodoEAno <- as.data.frame(group_by(cepagri_aux, periodo, ano)%>%summarise(TempMedia=mean( na.rm = TRUE, temp), SensaMedia=mean( na.rm = TRUE, sensa), Vento=mean( na.rm = TRUE, vento)))
 # remove anos que contém dados desbalanceados (2014 e 2020)
 ventoPorPeriodoEAno <- ventoPorPeriodoEAno[ventoPorPeriodoEAno$ano %in% intervalo, ]
 # exibe dados em gráficos de barra agrupados por período
@@ -342,7 +329,7 @@ for (i in 1:length(periodos)) {
 }
 summaryByDayPeriod <- list()
 for (i in 1:length(cepagri_periodos)) {
-    summaryByDayPeriod[i] <- list(group_by(cepagri_periodos[[i]], ano)%>%summarise(Vento=mean(vento)))
+    summaryByDayPeriod[i] <- list(group_by(cepagri_periodos[[i]], ano)%>%summarise(Vento=mean( na.rm = TRUE, vento)))
 }
 
 #--------------------------------------------------------------#
@@ -394,7 +381,7 @@ grafico_temp_sensa_umid <- function(df, estacao)
     df$umid <- normalize(df[, 'umid'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
     df$sensa <- normalize(df[, 'sensa'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
 
-    media_estacao_temp_sensa_umida <- group_by(df, data)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), UmidMedia=mean(umid))
+    media_estacao_temp_sensa_umida <- group_by(df, data)%>%summarise(TempMedia=mean( na.rm = TRUE, temp), SensaMedia=mean( na.rm = TRUE, sensa), UmidMedia=mean( na.rm = TRUE, umid))
     ggplot(media_estacao_temp_sensa_umida, aes(x=data)) +
     geom_line(aes(y=TempMedia,colour = "Temperatura Média")) +
     geom_line(aes(y=SensaMedia, colour = "Sensação Termica Média")) +
@@ -438,7 +425,7 @@ cepagri_analise$diferenca_temp_sensa <- cepagri_analise$temp-cepagri_analise$sen
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 cepagri_analise<-cepagri_analise[cepagri_analise$ano %in% intervalo,]
 
-dados_medios<-group_by(cepagri_analise, mes)%>%summarise(Temperatura=mean(temp), Umidade=mean(umid), Sensacao=mean(sensa), Vento=mean(vento), Diferenca_temp_sensa=mean(diferenca_temp_sensa))
+dados_medios<-group_by(cepagri_analise, mes)%>%summarise(Temperatura=mean( na.rm = TRUE, temp), Umidade=mean( na.rm = TRUE, umid), Sensacao=mean( na.rm = TRUE, sensa), Vento=mean( na.rm = TRUE, vento), Diferenca_temp_sensa=mean( na.rm = TRUE, diferenca_temp_sensa))
 
 
 dados_medios_normalizados<-dados_medios
