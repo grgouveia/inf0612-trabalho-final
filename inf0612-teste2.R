@@ -138,12 +138,22 @@ cepagri$horario <- as.POSIXct(
 #--------------------------------------------------------------#
 #     1.4 Removendo linhas com valor NA                        #
 #--------------------------------------------------------------#
-na_percent <- paste(sum(is.na(cepagri))/nrow(cepagri)*100,"%")
-if (na_percent > 0) {
-  is_na <- apply(cepagri, 1, is_na)
-  cepagri <- cepagri[!is_na,];cepagri
-  confirm_removal <- !any(is.na(cepagri)); paste("Rows with NA data", ifelse(confirm_removal, "removed.", "removal failed."))
-}
+
+library(tidyverse)
+
+#Retorna as linhas duplicadas do data frame
+cepagri[duplicated(cepagri),]
+
+# Exemplo de filtragem de uma linha duplidada
+cepagri[cepagri$horario == '2015-01-23 09:24:00',]
+
+# Retorna as linhas duplicadas do data frame
+cepagri[duplicated(cepagri),]
+# Remove linhas duplicadas
+cepagri <- cepagri[!duplicated(cepagri),]
+
+#verifica se ainda tem linhas duplicadas
+cepagri[duplicated(cepagri),]
 
 
 #--------------------------------------------------------------#
@@ -195,7 +205,6 @@ cepagri <- cepagri[!duplicated(cepagri),]
 
 #verifica se ainda tem linhas duplicadas
 cepagri[duplicated(cepagri),]
-
 
 
 #--------------------------------------------------------------#
@@ -450,9 +459,9 @@ ggplot(dados_medios_normalizados, aes(x = mes)) +
 
 
 #--------------------------------------------------------------#
-#     3. Analisando dados                                       #
+#     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     3.X Analise vento temperatura verao inverno              #
+#     3.X Analise vento e temperatura no verao e inverno       #
 #--------------------------------------------------------------#
 
 cepagri_vt <- cepagri
