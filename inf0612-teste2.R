@@ -352,12 +352,9 @@ dados_verao_2019 <- cepagri_verao2[(cepagri_verao2$data >= '2018-12-21' & cepagr
 #dados_medios_normalizados$Temperatura<-(dados_medios$Temperatura-min(dados_medios$Temperatura))/(max(dados_medios$Temperatura)-min(dados_medios$Temperatura))
 
 ################################## Inicio Normalização ##############################
-# Biblioteca necessária para normalizar os dados
+# Biblioteca para normalizar os dados
 # install.packages('BBmisc')
 # library(BBmisc)
-
-
-####################### Fim Normalização ###################
 
 grafico_temp_sensa_umid <- function(df, estacao)
 {
