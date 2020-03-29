@@ -112,31 +112,7 @@ summary(cepagri)
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.2 Removendo outliers                                   #
-#--------------------------------------------------------------#
-## Analisando discrepancia de cada informacao e
-## removendo outliers
-#sensa
-summary(cepagri$sensa)
-cepagri[cepagri$sensa == 99.9, 5] <- NA
-
-#umid
-summary(cepagri$umid)
-cepagri[cepagri$umid == 0,]
-sort(cepagri[cepagri$umid < 5,4])
-umid_muito_baixa<-cepagri[cepagri$umid < 5,4]
-#ocorrem muito nas medicoes entre 07:00 e 07:10 e apenas esse sensor com 0, parece um erro do sensor
-#alem disso nao existe nenhum outro valor perto de 0, nem menor que 5
-#Para o valor maior
-umid_muito_alta<-sort(cepagri[cepagri$umid > 95 & cepagri$umid!=100 ,4 ], decreasing = TRUE)
-#ocorrem valores proximos de 100, entao 100 parece um valor valido
-
-cepagri[cepagri$umid == 0, 4] <- NA
-
-#--------------------------------------------------------------#
-#     1. Processando os dados                                  #
-#--------------------------------------------------------------#
-#     1.3 Corrigindo coerções implícitas indesejadas           #
+#     1.2 Corrigindo coerções implícitas indesejadas           #
 #--------------------------------------------------------------#
 for (i in 2:length(cepagri)) {
   aux <- cepagri[,i]
@@ -151,7 +127,7 @@ for (i in 2:length(cepagri)) {
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.5 Convertendo coluna de data p/ POSIXct
+#     1.3 Convertendo coluna de data p/ POSIXct
 #--------------------------------------------------------------#
 cepagri$horario <- as.POSIXct(
                 as.character(cepagri$horario),
@@ -160,7 +136,7 @@ cepagri$horario <- as.POSIXct(
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.6 Removendo linhas com valor NA                        #
+#     1.4 Removendo linhas com valor NA                        #
 #--------------------------------------------------------------#
 na_percent <- paste(sum(is.na(cepagri))/nrow(cepagri)*100,"%")
 if (na_percent > 0) {
@@ -169,23 +145,42 @@ if (na_percent > 0) {
   confirm_removal <- !any(is.na(cepagri)); paste("Rows with NA data", ifelse(confirm_removal, "removed.", "removal failed."))
 }
 
+
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.7 Análise de registros duplicados                      #
+#     1.5 Removendo outliers                                   #
+#--------------------------------------------------------------#
+
+summary(cepagri)
+
+#e possivel ver pelo summary que existem duas medidas que sao outliers, a sensacao termica de 99.9
+#e a umidade de zero. Abaixo executando o boxplot e hsitogramas sem esse tratamento fica mais evidente ainda
+#nos dois casos, a solucao escolhida foi deixar o valor com Nas pois os outros registros sao registros validos
+## removendo outliers
+#sensa
+summary(cepagri$sensa)
+cepagri[cepagri$sensa == 99.9, 5] <- NA
+
+#umid
+cepagri[cepagri$umid == 0, 4] <- NA
+
+summary(cepagri)
+#confirmando que apenas as colunas esperadas foram colocadas na
+cepagri[is.na(cepagri$sensa), ]
+cepagri[is.na(cepagri$umid), ]
+
+
+#--------------------------------------------------------------#
+#     1. Processando os dados                                  #
+#--------------------------------------------------------------#
+#     1.6 Análise de registros duplicados                      #
 #         Valores repetidos durante dias consectivos           #
 #--------------------------------------------------------------#
 # filtra os valores recorrentes em 144 dias consecutivos
 filtro <- consecutive(cepagri$temp, 144)
 length(unique(as.Date(cepagri[filtro, 1])))
 
-#umid
-summary(cepagri$vento)
-sort(cepagri[cepagri$vento < 5,3])
-#ocorrem valores proximos de 0, entao 0 parece um valor valido
-#sobre o valor mais alto, 147, pesquisando na internet foi uma medicao verifica
-#install.packages('tidyverse')
-library(tidyverse)
 
 #Retorna as linhas duplicadas do data frame
 cepagri[duplicated(cepagri),]
