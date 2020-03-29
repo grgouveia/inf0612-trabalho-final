@@ -374,7 +374,7 @@ grafico_temp_sensa_umid <- function(df, titulo, estacao)
     theme(axis.text.y=element_text(hjust=1, size = 13, face = 'bold')) +
     ylab("Escala normalizada entre 0 e 1") +
     xlab( estacao) +
-    ggtitle(paste('Temperatura média x Sensação Térmica média x Umidade',titulo))
+    ggtitle(paste('Médias das Temperatura x Sensação Térmica x Umidade',titulo))
 }
 
 grafico_temp_sensa_umid(dados_verao_2015, 'Verão 2015', 'Verão')
