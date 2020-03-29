@@ -143,8 +143,7 @@ consecutive <- function(vector, k = 1) {
 #--------------------------------------------------------------#
 #     1. Tratando os  dados                                    #
 #--------------------------------------------------------------#
-#     1.1 Carregando dados                                     #
-#--------------------------------------------------------------#
+
 names <- c("horario", "temp", "vento", "umid", "sensa")
 con <- url("https://www.ic.unicamp.br/~zanoni/cepagri/cepagri.csv", "r")
 cepagri <- read.csv(con, header = FALSE,
@@ -160,7 +159,7 @@ summary(cepagri)
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.2 Corrigindo coerções implícitas indesejadas           #
+#     1.1 Corrigindo coerções implícitas indesejadas           #
 #--------------------------------------------------------------#
 for (i in 2:length(cepagri)) {
   aux <- cepagri[,i]
@@ -175,7 +174,7 @@ for (i in 2:length(cepagri)) {
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.3 Convertendo coluna de data p/ POSIXct
+#     1.2 Convertendo coluna de data p/ POSIXct
 #--------------------------------------------------------------#
 cepagri$horario <- as.POSIXct(
                 as.character(cepagri$horario),
@@ -184,7 +183,8 @@ cepagri$horario <- as.POSIXct(
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.4 Removendo linhas com valor NA                        #
+#     1.3 Observações Ausentes                                 #
+#         Removendo linhas com valor NA                        #
 #--------------------------------------------------------------#
 na_percent <- paste(sum(is.na(cepagri))/nrow(cepagri)*100,"%")
 if (na_percent > 0) {
@@ -196,7 +196,7 @@ if (na_percent > 0) {
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.5 Removendo outliers                                   #
+#     1.4 Removendo outliers                                   #
 #--------------------------------------------------------------#
 summary(cepagri)
 
@@ -219,7 +219,8 @@ cepagri[is.na(cepagri$umid), ]
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.6 Análise de registros duplicados                      #
+#     1.5 Dados Redundantes                                    #
+#         Análise de registros duplicados                      #
 #         Valores repetidos durante dias consectivos           #
 #--------------------------------------------------------------#
 # filtra os valores recorrentes em 144 dias consecutivos
@@ -245,16 +246,43 @@ cepagri[duplicated(cepagri),]
 #     2. Analise exploratória dos dados                        #
 #--------------------------------------------------------------#
 #                                                              #
-#     2.1 Medidas de posição com a base tratada                #
+#     2.1 Medidas de Posição com a Base Tratada                #
 #--------------------------------------------------------------#
 summary(cepagri)
 
 #--------------------------------------------------------------#
 #     2. Analise exploratória dos dados                        #
 #--------------------------------------------------------------#
-##                                                             #
-#     2.2 Medidas de dispersão com a base tratada                #
+#                                                              #
+#     2.2 Medidas de Dispersão com a Base Tratada              #
 #--------------------------------------------------------------#
+
+#--------------------------Desvio padrão
+dp <- c()
+media <- c()
+coef_var <- c()
+for(i in 2:5){
+    #Calculo desvio padrão para colunas 2:5
+    dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
+    #calculo média colunas 2:5
+    media <-round(c(media, mean( na.rm = TRUE, cepagri[,i])))
+}
+
+#----------------------Coeficiente de variação
+
+coef_var <- round(c(coef_var, (dp/media)*100),2)
+# Tabela que mostra a média, desvio padrão e coeficiente de variação de cada coluna
+variaveis <- c('temp','vento','umid','sensa')
+medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
+
+#--------------------------------------------------------------#
+#     2. Analise exploratória dos dados                        #
+#--------------------------------------------------------------#
+#                                                              #
+#     2.3 Boxplot e histograma das variáveis                   #
+#--------------------------------------------------------------#
+
+
 #---------------------- Boxplot
 boxplot <- function(variavel,titulo)
 {
@@ -275,24 +303,6 @@ boxplot(cepagri$temp, "boxplot Temperatura")
 boxplot(cepagri$sensa, "boxplot Sensação Térmica")
 boxplot(cepagri$vento, "boxplot Vento")
 boxplot(cepagri$umid, "boxplot Umidade")
-
-#--------------------------Desvio padrão
-dp <- c()
-media <- c()
-coef_var <- c()
-for(i in 2:5){
-    #Calculo desvio padrão para colunas 2:5
-    dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
-    #calculo média colunas 2:5
-    media <-round(c(media, mean( na.rm = TRUE, cepagri[,i])))
-}
-
-#----------------------Coeficiente de variação
-
-coef_var <- round(c(coef_var, (dp/media)*100),2)
-# Tabela que mostra a média, desvio padrão e coeficiente de variação de cada coluna
-variaveis <- c('temp','vento','umid','sensa')
-medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
 
 
 #-------------------------Histogramas
