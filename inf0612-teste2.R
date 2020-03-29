@@ -316,7 +316,7 @@ periodos <- c("1 - manhã", "2 - tarde", "3 - noite", "4 - madrugada")
 cepagri_aux <- cepagri
 
 # Removendo linhas com valor NA                        
-na_percent <- paste(sum(is.na(cepagri_aux_aux))/nrow(cepagri_aux)*100,"%")
+na_percent <- paste(sum(is.na(cepagri_aux))/nrow(cepagri_aux)*100,"%")
 if (na_percent > 0) {
    is_na <- apply(cepagri_aux, 1, is_na)
    cepagri_aux <- cepagri_aux[!is_na,];cepagri_aux
@@ -332,7 +332,6 @@ ventoPorPeriodoEAno <- as.data.frame(group_by(cepagri_aux, periodo, ano)%>%summa
 ventoPorPeriodoEAno <- ventoPorPeriodoEAno[ventoPorPeriodoEAno$ano %in% intervalo, ]
 # exibe dados em gráficos de barra agrupados por período
 gbarplot(ventoPorPeriodoEAno)
-
 
 # cria tabela para o modek
 # filtra e armazena em listas as medições de acordo com os períodos
