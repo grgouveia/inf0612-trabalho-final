@@ -21,9 +21,15 @@
 #--------------------------------------------------------------#
 install.packages('tidyverse')
 install.packages("DT")
+install.packages("hrbrthemes")
+install.packages("viridis")
+install.packages("hrbrthemes"); 
+install.packages("systemfonts")
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
+library(viridis)
+library(hrbrthemes)
 
 # extrai hora de um Date em POSIXct
 getHour <- function(time) {
@@ -151,7 +157,6 @@ if (na_percent > 0) {
 #--------------------------------------------------------------#
 #     1.5 Removendo outliers                                   #
 #--------------------------------------------------------------#
-
 summary(cepagri)
 
 #e possivel ver pelo summary que existem duas medidas que sao outliers, a sensacao termica de 99.9
@@ -169,7 +174,6 @@ summary(cepagri)
 #confirmando que apenas as colunas esperadas foram colocadas na
 cepagri[is.na(cepagri$sensa), ]
 cepagri[is.na(cepagri$umid), ]
-
 
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
@@ -196,8 +200,6 @@ cepagri <- cepagri[!duplicated(cepagri),]
 #verifica se ainda tem linhas duplicadas
 cepagri[duplicated(cepagri),]
 
-
-
 #--------------------------------------------------------------#
 #     2. Analise exploratória dos dados                        #
 #--------------------------------------------------------------#
@@ -212,9 +214,7 @@ summary(cepagri)
 ##                                                             #
 #     2.1 Medidas de posição com a base tratada                #
 #--------------------------------------------------------------#
-
 #---------------------- Boxplot
-
 boxplot <- function(variavel,titulo)
 {
   title <- paste(titulo)
@@ -288,17 +288,13 @@ temp_media
 #--------------------------------------------------------------#
 #                                                              #
 #     3.2 Análise de dados por períodos                        #
-#                                                              #
-# Primavera: 21 setembro até 20 dezembro                       #         
-# Verão: 21 dezembro até 20 março                              #
-# Outono: 21 março até 20 junho                                #
-# Inverno: 21 junho até 20 setembro                            #
 ##-------------------------------------------------------------#
 # classifica cada medição de acordo com o período do dia
 # (madrugada, manhã, tarde, noite)
 periodos <- c("madrugada", "manhã", "tarde", "noite")
 cepagri$hora <- getHour(cepagri$horario)
 cepagri$periodo <- as.character(lapply(cepagri$hora, getPeriod))
+ventoPorPeriodoEAno <-list(group_by(cepagri, periodo, ano)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento))); ventoPorPeriodoEAno
 
 # filtra e armazena em listas as medições de acordo com os períodos
 cepagri_periodos <- list()
@@ -307,9 +303,19 @@ for (i in 1:length(periodos)) {
 }
 summaryByDayPeriod <- list()
 for (i in 1:length(cepagri_periodos)) {
-    summaryByDayPeriod[i] <- list(group_by(cepagri_periodos[[i]], dia)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
+    summaryByDayPeriod[i] <- list(group_by(cepagri_periodos[[i]], ano)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
 }
 
+gbarplot(ventoPorPeriodoEAno[[1]], wrap = FALSE)
+gbarplot(ventoPorPeriodoEAno[[1]], wrap = TRUE)
+
+gbarplot <- function(df, wrap, wrapper) {
+  ggplot(df,
+         aes(fill=periodo, x=ano, y=Vento)) +
+    geom_bar(position="dodge", stat="identity") +
+    ggtitle("Vento por período do dia") +
+    if (wrap) facet_wrap(~periodo)  
+}
 
 
 #--------------------------------------------------------------#
