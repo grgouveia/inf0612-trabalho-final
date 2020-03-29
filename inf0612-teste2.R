@@ -54,10 +54,10 @@ getHour <- function(time) {
 
 # retorna periodo do dia de acordo com a hora
 getPeriod <- function(hour){
-  if (hour > 0 & hour < 6) return("1 - madrugada")
-  else if (hour >= 6 & hour < 12) return("2 - manhã")
-  else if (hour >= 12 & hour < 18) return("3 - tarde")
-  else return("4 - noite")
+  if (hour > 0 & hour < 6) return("4 - madrugada")
+  else if (hour >= 6 & hour < 12) return("1 - manhã")
+  else if (hour >= 12 & hour < 18) return("2 - tarde")
+  else return("3 - noite")
 }
 
 
@@ -331,22 +331,17 @@ cepagri$hora <- getHour(cepagri$horario)
 cepagri$periodo <- as.character(lapply(cepagri$hora, getPeriod))
 ventoPorPeriodoEAno <- as.data.frame(group_by(cepagri, periodo, ano)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), Vento=mean(vento)))
 # remove anos que contém dados desbalanceados (2014 e 2020)
-ventoPorPeriodoEAno[ventoPorPeriodoEAno$ano %in% intervalo, ]
+ventoPorPeriodoEAno <- ventoPorPeriodoEAno[ventoPorPeriodoEAno$ano %in% intervalo, ]
 # exibe dados em gráficos de barra agrupados por período
 gbarplot(ventoPorPeriodoEAno)
 
 
-###############################################################
-#-------------------------------------------------------------#
-#     3. Finalizar criação de tabeas!!!!                      #
-#     TODO                                                    #
-#-------------------------------------------------------------#
-################################################################
 # cria tabela para o modek
 # filtra e armazena em listas as medições de acordo com os períodos
 cepagri_periodos <- list()
+cepagri_filtered <-  cepagri[cepagri$ano %in% intervalo, ]
 for (i in 1:length(periodos)) {
-  cepagri_periodos[i] <- list(subset(cepagri, periodo == periodos[i]))
+  cepagri_periodos[i] <- list(subset(cepagri_filtered, periodo == periodos[i]))
 }
 summaryByDayPeriod <- list()
 for (i in 1:length(cepagri_periodos)) {
