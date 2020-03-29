@@ -31,7 +31,7 @@ library(ggplot2)
 library(dplyr)
 library(hrbrthemes)
 
-gbarplot <- function(df, wrap, wrapper) {
+gbarplot <- function(df) {
   ggplot(df, 
       aes(fill=periodo, x=ano, y=Vento)) +
       geom_bar(position=position_dodge(width=0.6), stat="identity", width=0.5) +
@@ -40,11 +40,7 @@ gbarplot <- function(df, wrap, wrapper) {
       theme_ipsum() +
       xlab("Ano") +
       ylab("Velocidade do Vento (km/h)") 
-      #if (wrap) facet_wrap(~periodo)  
 }
-
-gbarplot(ventoPorPeriodoEAno, wrap = FALSE)
-gbarplot(ventoPorPeriodoEAno, wrap = TRUE)
 
 # extrai hora de um Date em POSIXct
 getHour <- function(time) {
@@ -317,8 +313,7 @@ ventoPorPeriodoEAno <- as.data.frame(group_by(cepagri, periodo, ano)%>%summarise
 # remove anos que contém dados desbalanceados (2014 e 2020)
 ventoPorPeriodoEAno[ventoPorPeriodoEAno$ano %in% intervalo, ]
 # exibe dados em gráficos de barra agrupados por período
-gbarplot(ventoPorPeriodoEAno, wrap = FALSE)
-gbarplot(ventoPorPeriodoEAno, wrap = TRUE)
+gbarplot(ventoPorPeriodoEAno)
 
 
 ###############################################################
