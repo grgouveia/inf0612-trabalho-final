@@ -21,9 +21,11 @@
 #--------------------------------------------------------------#
 install.packages('tidyverse')
 install.packages("DT")
+install.packages('BBmisc')
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
+library(BBmisc)
 
 # extrai hora de um Date em POSIXct
 getHour <- function(time) {
@@ -347,25 +349,39 @@ dados_verao_2017 <- cepagri_verao2[(cepagri_verao2$data >= '2016-12-21' & cepagr
 dados_verao_2018 <- cepagri_verao2[(cepagri_verao2$data >= '2017-12-21' & cepagri_verao2$data <= '2018-3-21'),]
 dados_verao_2019 <- cepagri_verao2[(cepagri_verao2$data >= '2018-12-21' & cepagri_verao2$data <= '2019-3-21'),]
 
-grafico_temp_sensa <- function(df, titulo)
+#dados_medios_normalizados$Temperatura<-(dados_medios$Temperatura-min(dados_medios$Temperatura))/(max(dados_medios$Temperatura)-min(dados_medios$Temperatura))
+
+
+# Biblioteca necessária para normalizar os dados
+# library(BBmisc)
+
+grafico_temp_sensa_umid <- function(df, titulo, estacao)
 {
-    media_verao_temp_sensa <- group_by(df, data)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa))
-    ggplot(media_verao_temp_sensa, aes(x=data)) +
+    df$temp <- normalize(df[, 'temp'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
+    df$umid <- normalize(df[, 'umid'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
+    df$sensa <- normalize(df[, 'sensa'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
+
+    media_estacao_temp_sensa_umida <- group_by(df, data)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa), UmidMedia=mean(umid))
+    ggplot(media_estacao_temp_sensa_umida, aes(x=data)) +
     geom_line(aes(y=TempMedia,colour = "Temperatura Média")) +
     geom_line(aes(y=SensaMedia, colour = "Sensação Termica Média")) +
-    scale_colour_manual('', breaks = c('Temperatura Média', 'Sensação Termica Média'), values = c('red', 'blue')) +
+    geom_line(aes(y=UmidMedia, colour = 'Umidade Média')) +
+    scale_colour_manual('', 
+                        breaks = c('Temperatura Média', 'Sensação Termica Média', 'Umidade Média'), 
+                        values = c('red', 'blue', 'black')) +
     theme(legend.position = 'botton') +
-    scale_x_date(NULL, date_labels <- "%b/%y", date_breaks <- "4 week") +
-    theme(axis.text.x=element_text(angle = 60, hjust=1, size = 11, face = 'bold')) +
-    ylab("Temperatura (C°)") +
-    ggtitle(titulo)
+    theme(axis.text.x=element_text(angle = 60, hjust=1, size = 15, face = 'bold')) +
+    theme(axis.text.y=element_text(hjust=1, size = 13, face = 'bold')) +
+    ylab("Escala normalizada entre 0 e 1") +
+    xlab( estacao) +
+    ggtitle(paste('Temperatura média x Sensação Térmica média x Umidade',titulo))
 }
 
-grafico_temp_sensa(dados_verao_2015, 'Temperatura média e Sensação Térmica média durante o verão de 2015')
-grafico_temp_sensa(dados_verao_2016, 'Temperatura média e Sensação Térmica média durante o verão de 2016')
-grafico_temp_sensa(dados_verao_2017, 'Temperatura média e Sensação Térmica média durante o verão de 2017')
-grafico_temp_sensa(dados_verao_2018, 'Temperatura média e Sensação Térmica média durante o verão de 2018')
-grafico_temp_sensa(dados_verao_2019, 'Temperatura média e Sensação Térmica média durante o verão de 2019')
+grafico_temp_sensa_umid(dados_verao_2015, 'Verão 2015', 'Verão')
+grafico_temp_sensa_umid(dados_verao_2016, 'Verão 2016', 'Verão')
+grafico_temp_sensa_umid(dados_verao_2017, 'Verão 2017', 'Verão')
+grafico_temp_sensa_umid(dados_verao_2018, 'Verão 2018', 'Verão')
+grafico_temp_sensa_umid(dados_verao_2019, 'Verão 2019', 'Verão')
 
 
 
