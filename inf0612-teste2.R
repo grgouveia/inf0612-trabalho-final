@@ -230,6 +230,8 @@ boxplot <- function(variavel,titulo)
   return(plot)
 }  
 
+
+
 boxplot(cepagri$temp, "boxplot Temperatura")
 boxplot(cepagri$sensa, "boxplot Sensação Térmica")
 boxplot(cepagri$vento, "boxplot Vento")
@@ -309,13 +311,60 @@ for (i in 1:length(cepagri_periodos)) {
 }
 
 
-#-------------------------Analisando relacao temperatura umidade e sensacao termica
-cepagri_analise <- cepagri
 
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     3.3 Comparativo entre as medidas                         #
+#     3.4 Analise das estacoes verao e inverno                 #
+#--------------------------------------------------------------#
+
+cepagri_analise <- cepagri
+
+cepagri_verao<-cepagri_analise[((cepagri_analise$mes==12&cepagri_analise$dia>=21) | (cepagri_analise$mes==1) | (cepagri_analise$mes==2) |  (cepagri_analise$mes==3 & cepagri_analise$dia<=20)),]
+cepagri_inverno<-cepagri_analise[((cepagri_analise$mes==6&cepagri_analise$dia>=21) | (cepagri_analise$mes==7) | (cepagri_analise$mes==8) |  (cepagri_analise$mes==9 & cepagri_analise$dia<=20)),]
+#-----------------------------------------------------------------------------------------#
+#Gráficos de linhas para avaliar o comportamento da temperatura e sensação termica por dia durante o verão e inverno
+#-----------------------------------------------------------------------------------------#
+# média da temperatura e sensação termica da dia durante um determinada ano no período do #verão
+#média da temperatura e sensação termica da dia durante um determinada ano no período do inverno
+
+# Gera outro dataframe, transforma as colunas ano, mês e dia para o formato Date e agrupa em uma coluna
+cepagri_verao2 <- cepagri_verao
+cepagri_verao2$data <- as.Date(paste(cepagri_verao2$ano, cepagri_verao2$mes, cepagri_verao2$dia, sep = "-"))
+
+#Seta para todos os anos o intervalo de tempo do verão
+dados_verao_2015 <- cepagri_verao2[(cepagri_verao2$data >= '2014-12-21' & cepagri_verao2$data <= '2015-3-21'),]
+dados_verao_2016 <- cepagri_verao2[(cepagri_verao2$data >= '2015-12-21' & cepagri_verao2$data <= '2016-3-21'),]
+dados_verao_2017 <- cepagri_verao2[(cepagri_verao2$data >= '2016-12-21' & cepagri_verao2$data <= '2017-3-21'),]
+dados_verao_2018 <- cepagri_verao2[(cepagri_verao2$data >= '2017-12-21' & cepagri_verao2$data <= '2018-3-21'),]
+dados_verao_2019 <- cepagri_verao2[(cepagri_verao2$data >= '2018-12-21' & cepagri_verao2$data <= '2019-3-21'),]
+
+grafico_temp_sensa <- function(df, titulo)
+{
+    media_verao_temp_sensa <- group_by(df, data)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa))
+    ggplot(media_verao_temp_sensa, aes(x=data)) +
+    geom_line(aes(y=TempMedia,colour = "Temperatura Média")) +
+    geom_line(aes(y=SensaMedia, colour = "Sensação Termica Média")) +
+    scale_colour_manual('', breaks = c('Temperatura Média', 'Sensação Termica Média'), values = c('red', 'blue')) +
+    theme(legend.position = 'botton') +
+    scale_x_date(NULL, date_labels <- "%b/%y", date_breaks <- "4 week") +
+    theme(axis.text.x=element_text(angle = 60, hjust=1, size = 11, face = 'bold')) +
+    ylab("Temperatura (C°)") +
+    ggtitle(titulo)
+}
+
+grafico_temp_sensa(dados_verao_2015, 'Temperatura média e Sensação Térmica média durante o verão de 2015')
+grafico_temp_sensa(dados_verao_2016, 'Temperatura média e Sensação Térmica média durante o verão de 2016')
+grafico_temp_sensa(dados_verao_2017, 'Temperatura média e Sensação Térmica média durante o verão de 2017')
+grafico_temp_sensa(dados_verao_2018, 'Temperatura média e Sensação Térmica média durante o verão de 2018')
+grafico_temp_sensa(dados_verao_2019, 'Temperatura média e Sensação Térmica média durante o verão de 2019')
+
+
+
+#--------------------------------------------------------------#
+#     3. Analisando dados                                      #
+#--------------------------------------------------------------#
+#     3.X Comparativo entre as medidas                         #
 #--------------------------------------------------------------#
 cepagri_analise <- cepagri
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$temp), ]
@@ -323,6 +372,10 @@ cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$vento), ]
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$sensa), ]
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$umid), ]
 cepagri_analise$diferenca_temp_sensa <- cepagri_analise$temp-cepagri_analise$sensa
+
+
+intervalo <- list(2015, 2016, 2017, 2018, 2019)
+cepagri_analise<-cepagri_analise[cepagri_analise$ano %in% intervalo,]
 
 dados_medios<-group_by(cepagri_analise, mes)%>%summarise(Temperatura=mean(temp), Umidade=mean(umid), Sensacao=mean(sensa), Vento=mean(vento), Diferenca_temp_sensa=mean(diferenca_temp_sensa))
 
@@ -353,7 +406,7 @@ ggplot(dados_medios, aes(x = mes)) +
   
   geom_point(aes(y = Vento, colour = "Velocidade Vento media")) +
   geom_line(aes(y = Vento, colour = "Velocidade Vento media")) +
-
+  
   
   theme_light() +
   labs(colour = element_blank(),
@@ -394,54 +447,6 @@ ggplot(dados_medios_normalizados, aes(x = mes)) +
                      minor_breaks = NULL)
 
 
-
-#--------------------------------------------------------------#
-#     3. Analisando dados                                      #
-#--------------------------------------------------------------#
-#     3.4 Analise das estacoes verao e inverno                 #
-#--------------------------------------------------------------#
-
-cepagri_analise <- cepagri
-cepagri_analise$dia<-getDay(cepagri_analise$horario)
-
-cepagri_verao<-cepagri_analise[((cepagri_analise$mes==12&cepagri_analise$dia>=21) | (cepagri_analise$mes==1) | (cepagri_analise$mes==2) |  (cepagri_analise$mes==3 & cepagri_analise$dia<=20)),]
-cepagri_inverno<-cepagri_analise[((cepagri_analise$mes==6&cepagri_analise$dia>=21) | (cepagri_analise$mes==7) | (cepagri_analise$mes==8) |  (cepagri_analise$mes==9 & cepagri_analise$dia<=20)),]
-#-----------------------------------------------------------------------------------------#
-#Gráficos de linhas para avaliar o comportamento da temperatura e sensação termica por dia durante o verão e inverno
-#-----------------------------------------------------------------------------------------#
-# média da temperatura e sensação termica da dia durante um determinada ano no período do #verão
-#média da temperatura e sensação termica da dia durante um determinada ano no período do inverno
-
-# Gera outro dataframe, transforma as colunas ano, mês e dia para o formato Date e agrupa em uma coluna
-cepagri_verao2 <- cepagri_verao
-cepagri_verao2$data <- as.Date(paste(cepagri_verao2$ano, cepagri_verao2$mes, cepagri_verao2$dia, sep = "-"))
-
-#Seta para todos os anos o intervalo de tempo do verão
-dados_verao_2015 <- cepagri_verao2[(cepagri_verao2$data >= '2014-12-21' & cepagri_verao2$data <= '2015-3-21'),]
-dados_verao_2016 <- cepagri_verao2[(cepagri_verao2$data >= '2015-12-21' & cepagri_verao2$data <= '2016-3-21'),]
-dados_verao_2017 <- cepagri_verao2[(cepagri_verao2$data >= '2016-12-21' & cepagri_verao2$data <= '2017-3-21'),]
-dados_verao_2018 <- cepagri_verao2[(cepagri_verao2$data >= '2017-12-21' & cepagri_verao2$data <= '2018-3-21'),]
-dados_verao_2019 <- cepagri_verao2[(cepagri_verao2$data >= '2018-12-21' & cepagri_verao2$data <= '2019-3-21'),]
-
-grafico_temp_sensa <- function(df, titulo)
-{
-    media_verao_temp_sensa <- group_by(df, data)%>%summarise(TempMedia=mean(temp), SensaMedia=mean(sensa))
-    ggplot(media_verao_temp_sensa, aes(x=data)) +
-    geom_line(aes(y=TempMedia,colour = "Temperatura Média")) +
-    geom_line(aes(y=SensaMedia, colour = "Sensação Termica Média")) +
-    scale_colour_manual('', breaks = c('Temperatura Média', 'Sensação Termica Média'), values = c('red', 'blue')) +
-    theme(legend.position = 'botton') +
-    scale_x_date(NULL, date_labels <- "%b/%y", date_breaks <- "4 week") +
-    theme(axis.text.x=element_text(angle = 60, hjust=1, size = 11, face = 'bold')) +
-    ylab("Temperatura (C°)") +
-    ggtitle(titulo)
-}
-
-grafico_temp_sensa(dados_verao_2015, 'Temperatura média e Sensação Térmica média durante o verão de 2015')
-grafico_temp_sensa(dados_verao_2016, 'Temperatura média e Sensação Térmica média durante o verão de 2016')
-grafico_temp_sensa(dados_verao_2017, 'Temperatura média e Sensação Térmica média durante o verão de 2017')
-grafico_temp_sensa(dados_verao_2018, 'Temperatura média e Sensação Térmica média durante o verão de 2018')
-grafico_temp_sensa(dados_verao_2019, 'Temperatura média e Sensação Térmica média durante o verão de 2019')
 
 
 #--------------------------------------------------------------#
