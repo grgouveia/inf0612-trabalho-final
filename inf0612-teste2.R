@@ -8,7 +8,7 @@
 # Nome COMPLETO Aluna (o) 2: Marina Abichabki                  #
 #                                     Pivato                   #
 #                                                              #
-# Nome COMPLETO Aluna (o) 3: Paola São Thiago                  #
+# Nome COMPLETO Aluna (o) 3: Paola São Thiago da Cunha         #
 #                                                              #
 #                                                              #
 # Nome COMPLETO Aluna (o) 4:                                   #
@@ -26,6 +26,7 @@ install.packages("gdtools")
 install.packages("hrbrthemes")
 install.packages("viridis")
 install.packages('BBmisc')
+
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
@@ -36,6 +37,8 @@ library(ggplot2)
 library(dplyr)
 library(hrbrthemes)
 
+
+#Função de plotagem do gráfico velocidade vento por dia
 gbarplot <- function(df) {
   ggplot(df,
       aes(fill=periodo, x=ano, y=Vento)) +
@@ -44,6 +47,29 @@ gbarplot <- function(df) {
       theme_ipsum() +
       xlab("Ano") +
       ylab("Velocidade do Vento (km/h)")
+}
+
+#Função de plotagem do gráfico que compara temp sensa e umid
+grafico_temp_sensa_umid <- function(df, estacao)
+{
+    df$temp <- normalize(df[, 'temp'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
+    df$umid <- normalize(df[, 'umid'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
+    df$sensa <- normalize(df[, 'sensa'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
+
+    media_estacao_temp_sensa_umida <- group_by(df, data)%>%summarise(TempMedia=mean( na.rm = TRUE, temp), SensaMedia=mean( na.rm = TRUE, sensa), UmidMedia=mean( na.rm = TRUE, umid))
+    ggplot(media_estacao_temp_sensa_umida, aes(x=data)) +
+    geom_line(aes(y=TempMedia,colour = "Temperatura Média")) +
+    geom_line(aes(y=SensaMedia, colour = "Sensação Termica Média")) +
+    geom_line(aes(y=UmidMedia, colour = 'Umidade Média')) +
+    scale_colour_manual('',
+                        breaks = c('Temperatura Média', 'Sensação Termica Média', 'Umidade Média'),
+                        values = c('red', 'blue', 'black')) +
+    theme(legend.position = 'top') +
+    theme(axis.text.x=element_text(angle = 60, hjust=1, size = 15, face = 'bold')) +
+    theme(axis.text.y=element_text(hjust=1, size = 13, face = 'bold')) +
+    ylab("Escala normalizada entre 0 e 1") +
+    xlab( estacao)
+    #ggtitle(paste('Médias da Temperatura x Sensação Térmica x Umidade',titulo))
 }
 
 # extrai hora de um Date em POSIXct
@@ -113,11 +139,11 @@ consecutive <- function(vector, k = 1) {
       result[i] <- TRUE
  return(result)
 }
+
 #--------------------------------------------------------------#
 #     1. Tratando os  dados                                    #
 #--------------------------------------------------------------#
-#     1.1 Carregando dados                                     #
-#--------------------------------------------------------------#
+
 names <- c("horario", "temp", "vento", "umid", "sensa")
 con <- url("https://www.ic.unicamp.br/~zanoni/cepagri/cepagri.csv", "r")
 cepagri <- read.csv(con, header = FALSE,
@@ -133,7 +159,7 @@ summary(cepagri)
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.2 Corrigindo coerções implícitas indesejadas           #
+#     1.1 Corrigindo coerções implícitas indesejadas           #
 #--------------------------------------------------------------#
 for (i in 2:length(cepagri)) {
   aux <- cepagri[,i]
@@ -148,7 +174,7 @@ for (i in 2:length(cepagri)) {
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.3 Convertendo coluna de data p/ POSIXct
+#     1.2 Convertendo coluna de data p/ POSIXct
 #--------------------------------------------------------------#
 cepagri$horario <- as.POSIXct(
                 as.character(cepagri$horario),
@@ -157,7 +183,8 @@ cepagri$horario <- as.POSIXct(
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.4 Removendo linhas com valor NA                        #
+#     1.3 Observações Ausentes                                 #
+#         Removendo linhas com valor NA                        #
 #--------------------------------------------------------------#
 na_percent <- paste(sum(is.na(cepagri))/nrow(cepagri)*100,"%")
 if (na_percent > 0) {
@@ -169,7 +196,7 @@ if (na_percent > 0) {
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.5 Removendo outliers                                   #
+#     1.4 Removendo outliers                                   #
 #--------------------------------------------------------------#
 summary(cepagri)
 
@@ -192,7 +219,8 @@ cepagri[is.na(cepagri$umid), ]
 #--------------------------------------------------------------#
 #     1. Processando os dados                                  #
 #--------------------------------------------------------------#
-#     1.6 Análise de registros duplicados                      #
+#     1.5 Dados Redundantes                                    #
+#         Análise de registros duplicados                      #
 #         Valores repetidos durante dias consectivos           #
 #--------------------------------------------------------------#
 # filtra os valores recorrentes em 144 dias consecutivos
@@ -218,16 +246,43 @@ cepagri[duplicated(cepagri),]
 #     2. Analise exploratória dos dados                        #
 #--------------------------------------------------------------#
 #                                                              #
-#     2.1 Medidas de posição com a base tratada                #
+#     2.1 Medidas de Posição com a Base Tratada                #
 #--------------------------------------------------------------#
 summary(cepagri)
 
 #--------------------------------------------------------------#
 #     2. Analise exploratória dos dados                        #
 #--------------------------------------------------------------#
-##                                                             #
-#     2.2 Medidas de dispersão com a base tratada                #
+#                                                              #
+#     2.2 Medidas de Dispersão com a Base Tratada              #
 #--------------------------------------------------------------#
+
+#--------------------------Desvio padrão
+dp <- c()
+media <- c()
+coef_var <- c()
+for(i in 2:5){
+    #Calculo desvio padrão para colunas 2:5
+    dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
+    #calculo média colunas 2:5
+    media <-round(c(media, mean( na.rm = TRUE, cepagri[,i])))
+}
+
+#----------------------Coeficiente de variação
+
+coef_var <- round(c(coef_var, (dp/media)*100),2)
+# Tabela que mostra a média, desvio padrão e coeficiente de variação de cada coluna
+variaveis <- c('temp','vento','umid','sensa')
+medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
+
+#--------------------------------------------------------------#
+#     2. Analise exploratória dos dados                        #
+#--------------------------------------------------------------#
+#                                                              #
+#     2.3 Boxplot e histograma das variáveis                   #
+#--------------------------------------------------------------#
+
+
 #---------------------- Boxplot
 boxplot <- function(variavel,titulo)
 {
@@ -249,24 +304,6 @@ boxplot(cepagri$sensa, "boxplot Sensação Térmica")
 boxplot(cepagri$vento, "boxplot Vento")
 boxplot(cepagri$umid, "boxplot Umidade")
 
-#--------------------------Desvio padrão
-dp <- c()
-media <- c()
-coef_var <- c()
-for(i in 2:5){
-    #Calculo desvio padrão para colunas 2:5
-    dp <- round(c(dp,sd(cepagri[,i],na.rm = TRUE)),2)
-    #calculo média colunas 2:5
-    media <-round(c(media, mean( na.rm = TRUE, cepagri[,i])))
-}
-
-#----------------------Coeficiente de variação
-
-coef_var <- round(c(coef_var, (dp/media)*100),2)
-# Tabela que mostra a média, desvio padrão e coeficiente de variação de cada coluna
-variaveis <- c('temp','vento','umid','sensa')
-medidas_dispersao <-data.frame(variaveis,media,dp,coef_var); medidas_dispersao
-
 
 #-------------------------Histogramas
 # Histograma de cada coluna
@@ -277,10 +314,10 @@ hist(cepagri$umid, row = 'gray', main = 'Histograma Umidade', xlab = 'Umidade', 
 
 
 #--------------------------------------------------------------#
-#     3. Analisando dados                                      #
+#     2. Analise exploratória dos dados                        #
 #--------------------------------------------------------------#
-#     3.1 Agrupando dados por mês e ano                        #
-#      Filtro de dados agrupados com base em intervalos        #
+#     2.4 Agrupando dados por mês e ano                        #
+#         Filtro de dados agrupados com base em intervalos     #
 #--------------------------------------------------------------#
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 filterByYear <- filterBy("ano", cepagri, intervalo)
@@ -300,12 +337,15 @@ temp_media
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     3.2 Análise de dados por períodos                        #
-#     classifica cada medição de acordo com o período do dia   #
+#     3.1 Comparação entre medidas coletadas                   #
+#         Análise de dados por períodos                        #
+#--------------------------------------------------------------#
+
+#classifica cada medição de acordo com o período do dia   #
 #     (madrugada, manhã, tarde, noite) e exibe a velocidade    #
 #     média do vento de acordo com cada período ao longo dos   #
-#     anos                                                     #
-#--------------------------------------------------------------#
+#     anos 
+
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 periodos <- c("1 - manhã", "2 - tarde", "3 - noite", "4 - madrugada")
 cepagri_aux <- cepagri
@@ -327,6 +367,7 @@ cepagri_aux_filtered <-  cepagri_aux[cepagri_aux$ano %in% intervalo, ]
 for (i in 1:length(periodos)) {
   cepagri_periodos[i] <- list(subset(cepagri_aux_filtered, periodo == periodos[i]))
 }
+
 summaryByDayPeriod <- list()
 for (i in 1:length(cepagri_periodos)) {
     summaryByDayPeriod[i] <- list(group_by(cepagri_periodos[[i]], ano)%>%summarise(Vento=mean( na.rm = TRUE, vento)))
@@ -335,7 +376,9 @@ for (i in 1:length(cepagri_periodos)) {
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     3.3 Analise das estacoes verao e inverno                 #
+#     3.2 Analise das estacoes verao e inverno                 #
+#         Comparação das médias da temp, sensa e umidade nas   #
+#         estações inv e verão                                 #
 #--------------------------------------------------------------#
 
 cepagri_analise <- cepagri
@@ -343,10 +386,8 @@ cepagri_analise <- cepagri
 cepagri_verao<-cepagri_analise[((cepagri_analise$mes==12&cepagri_analise$dia>=21) | (cepagri_analise$mes==1) | (cepagri_analise$mes==2) |  (cepagri_analise$mes==3 & cepagri_analise$dia<=20)),]
 cepagri_inverno<-cepagri_analise[((cepagri_analise$mes==6&cepagri_analise$dia>=21) | (cepagri_analise$mes==7) | (cepagri_analise$mes==8) |  (cepagri_analise$mes==9 & cepagri_analise$dia<=20)),]
 #-----------------------------------------------------------------------------------------#
-#Gráficos de linhas para avaliar o comportamento da temperatura e sensação termica por dia durante o verão e inverno
+#Gráficos de linhas para avaliar o comportamento da temperatura, umidade e sensação termica por dia durante o verão e inverno
 #-----------------------------------------------------------------------------------------#
-# média da temperatura e sensação termica da dia durante um determinada ano no período do #verão
-#média da temperatura e sensação termica da dia durante um determinada ano no período do inverno
 
 # Gera outro dataframe, transforma as colunas ano, mês e dia para o formato Date e agrupa em uma coluna
 cepagri_verao2 <- cepagri_verao
@@ -368,41 +409,14 @@ dados_inverno_2017 <- cepagri_inverno2[(cepagri_inverno2$data >= '2017-06-21' & 
 dados_inverno_2018 <- cepagri_inverno2[(cepagri_inverno2$data >= '2018-06-21' & cepagri_inverno2$data <= '2018-09-20'),]
 dados_inverno_2019 <- cepagri_inverno2[(cepagri_inverno2$data >= '2019-06-21' & cepagri_inverno2$data <= '2019-09-20'),]
 
-#dados_medios_normalizados$Temperatura<-(dados_medios$Temperatura-min(dados_medios$Temperatura))/(max(dados_medios$Temperatura)-min(dados_medios$Temperatura))
-
-################################## Normalização ##############################
-# Biblioteca necessária para normalizar os dados
-# install.packages('BBmisc')
-# library(BBmisc)
-
-grafico_temp_sensa_umid <- function(df, estacao)
-{
-    df$temp <- normalize(df[, 'temp'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
-    df$umid <- normalize(df[, 'umid'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
-    df$sensa <- normalize(df[, 'sensa'], method = "range", range = c(0, 1), margin = 1L, on.constant = "quiet")
-
-    media_estacao_temp_sensa_umida <- group_by(df, data)%>%summarise(TempMedia=mean( na.rm = TRUE, temp), SensaMedia=mean( na.rm = TRUE, sensa), UmidMedia=mean( na.rm = TRUE, umid))
-    ggplot(media_estacao_temp_sensa_umida, aes(x=data)) +
-    geom_line(aes(y=TempMedia,colour = "Temperatura Média")) +
-    geom_line(aes(y=SensaMedia, colour = "Sensação Termica Média")) +
-    geom_line(aes(y=UmidMedia, colour = 'Umidade Média')) +
-    scale_colour_manual('',
-                        breaks = c('Temperatura Média', 'Sensação Termica Média', 'Umidade Média'),
-                        values = c('red', 'blue', 'black')) +
-    theme(legend.position = 'top') +
-    theme(axis.text.x=element_text(angle = 60, hjust=1, size = 15, face = 'bold')) +
-    theme(axis.text.y=element_text(hjust=1, size = 13, face = 'bold')) +
-    ylab("Escala normalizada entre 0 e 1") +
-    xlab( estacao)
-    #ggtitle(paste('Médias da Temperatura x Sensação Térmica x Umidade',titulo))
-}
-
+#Executa Função e plota o gráfico para o verão
 grafico_temp_sensa_umid(dados_verao_2015, 'Verão 2015')
 grafico_temp_sensa_umid(dados_verao_2016, 'Verão 2016')
 grafico_temp_sensa_umid(dados_verao_2017, 'Verão 2017')
 grafico_temp_sensa_umid(dados_verao_2018,'Verão 2018')
 grafico_temp_sensa_umid(dados_verao_2019, 'Verão 2019')
 
+#Executa Função e plota o gráfico para o inverno
 grafico_temp_sensa_umid(dados_inverno_2015, 'Inverno 2015')
 grafico_temp_sensa_umid(dados_inverno_2016, 'Inverno 2016')
 grafico_temp_sensa_umid(dados_inverno_2017, 'Inverno 2017')
@@ -412,7 +426,8 @@ grafico_temp_sensa_umid(dados_inverno_2019, 'Inverno 2019')
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     3.X Comparativo entre as medidas                         #
+#     3.3 Comparação entre as medidas da velocidade e do vento #
+#         por dia ao longo dos anos                            #
 #--------------------------------------------------------------#
 cepagri_analise <- cepagri
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$temp), ]
@@ -421,12 +436,10 @@ cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$sensa), ]
 cepagri_analise <- cepagri_analise[!is.na(cepagri_analise$umid), ]
 cepagri_analise$diferenca_temp_sensa <- cepagri_analise$temp-cepagri_analise$sensa
 
-
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 cepagri_analise<-cepagri_analise[cepagri_analise$ano %in% intervalo,]
 
 dados_medios<-group_by(cepagri_analise, mes)%>%summarise(Temperatura=mean( na.rm = TRUE, temp), Umidade=mean( na.rm = TRUE, umid), Sensacao=mean( na.rm = TRUE, sensa), Vento=mean( na.rm = TRUE, vento), Diferenca_temp_sensa=mean( na.rm = TRUE, diferenca_temp_sensa))
-
 
 dados_medios_normalizados<-dados_medios
 
@@ -439,8 +452,6 @@ dados_medios_normalizados$Diferenca_temp_sensa<-(dados_medios$Diferenca_temp_sen
 dados_tabela_para_relatorio<-round(dados_medios, digits = 2)
 
 DT::datatable(round(dados_medios, digits = 2), fillContainer = TRUE, rownames = FALSE, caption = "Valores médios por mês", autoHideNavigation=TRUE)
-
-
 
 ggplot(dados_medios, aes(x = mes)) +
   geom_point(aes(y = Temperatura, colour = "Temperatura media")) +
@@ -495,16 +506,14 @@ ggplot(dados_medios_normalizados, aes(x = mes)) +
                      minor_breaks = NULL)
 
 
-
-
 #--------------------------------------------------------------#
 #     3. Analisando dados                                      #
 #--------------------------------------------------------------#
-#     3.X Analise vento e temperatura no verao e inverno       #
+#     3.5 Comparação vento x Temperatura durante as estações   #
+#         do verão e do inverno                                #
 #--------------------------------------------------------------#
 
 cepagri_vt <- cepagri
-
 
 intervalo <- list(2015, 2016, 2017, 2018, 2019)
 cepagri_vt<-cepagri_vt[cepagri_vt$ano %in% intervalo,]
@@ -541,8 +550,6 @@ ggplot(cepagri_vt_verao, aes(x = vento, fill = escala_temp)) + geom_histogram(co
   scale_x_continuous(name = "Vento", limits = c(1, 77)) +
   scale_y_continuous(name = "Frequencia")
 
-
-
 ggplot(cepagri_vt_inverno, aes(x = vento, fill = escala_temp)) + geom_histogram(color = "White", binwidth = 5, boundary = 0)+
   theme_light() +
   labs(colour = element_blank(),
@@ -566,9 +573,6 @@ cepagri_vt$estacao <-  ifelse(cepagri_vt$mes == 1 | cepagri_vt$mes ==2, "Verao",
                                      )#mes 3
                               )#mes 12
 )#mes 1 e 2
-
-
-
 
   cepagri_vt_tabela <-
     group_by(cepagri_vt,  estacao, escala_temp, escala_vento)%>%count()
